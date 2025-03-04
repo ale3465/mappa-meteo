@@ -43,8 +43,8 @@
                 let tempF = outdoor.temperature.value;
                 let tempC = ((tempF - 32) * 5/9).toFixed(0);
                 let humidity = outdoor.humidity.value;
-                let wind = outdoor.wind_speed ? outdoor.wind_speed.value : "N/D";
-                let rain = outdoor.rain ? outdoor.rain.value : "N/D";
+                let wind = outdoor.wind_speed ? outdoor.wind_speed.value;
+                let rain = outdoor.rain ? outdoor.rain.value;
 
                 var circle = L.circleMarker([42.0699, 13.2531], {
                     radius: 12,
