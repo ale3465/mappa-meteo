@@ -1,69 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>Mappa Meteo Ecowitt</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-        /* Impostazioni per far occupare l'intero schermo a html, body e #map */
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-        #map {
-            width: 100%;
-            height: 100%;
-        }
-        .temp-label {
-            background: none !important;
-            border: none !important;
-            box-shadow: none !important;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            line-height: 14px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Mappa Meteo Ecowitt</title>
+  <!-- Foglio di stile Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Script Leaflet -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    /* Resetta i margini e riempimenti default del browser */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+
+    /* Contenitore principale */
+    main {
+      padding: 1rem 2rem;
+    }
+
+    /* Titolo sopra la mappa */
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      color: #444;
+    }
+
+    /* Mappa a schermo parziale (70% viewport) */
+    #map {
+      width: 100%;
+      height: 70vh; /* Se vuoi a tutto schermo, imposta 100vh */
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* Footer (opzionale) */
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 0.5rem;
+      background-color: #f2f2f2;
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    /* Tooltip per la temperatura (se usi circleMarker con bindTooltip) */
+    .temp-label {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 14px;
+      color: white;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- CONTENUTO PRINCIPALE -->
+  <main>
+    <h1>Mappa live delle stazioni</h1>
     <div id="map"></div>
-    <script>
-        var map = L.map('map').setView([42.0699, 13.2531], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  </main>
 
-        async function fetchWeatherData() {
-            try {
-                let response = await fetch("https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all");
-                let data = await response.json();
-                console.log("Risposta API:", data);
+  <!-- FOOTER (OPZIONALE) -->
+  <footer>
+    MeteoMarso © 2025 - Tutti i diritti riservati
+  </footer>
 
-                let outdoor = data.data.outdoor;
-                let tempF = outdoor.temperature.value;
-                let tempC = ((tempF - 32) * 5/9).toFixed(0);
-                let humidity = outdoor.humidity.value;
-                let wind = outdoor.wind_speed ? outdoor.wind_speed.value;
-                let rain = outdoor.rain ? outdoor.rain.value;
+  <script>
+    // Crea la mappa e imposta la vista iniziale
+    var map = L.map('map').setView([42.0699, 13.2531], 10);
 
-                var circle = L.circleMarker([42.0699, 13.2531], {
-                    radius: 12,
-                    color: "black",      // bordo nero
-                    fillColor: "green",  // riempimento verde
-                    fillOpacity: 0.8
-                }).addTo(map)
-                .bindTooltip(`<div style='color: white; font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC}</div>`, 
-                             { permanent: true, direction: "center", className: "temp-label" })
-                .openPopup();
+    // Aggiunge il layer OSM
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Mappa da © OpenStreetMap'
+    }).addTo(map);
 
-                circle.on('click', function() {
-                    window.location.href = `dettagli.html?temp=${encodeURIComponent(tempC)}&humidity=${encodeURIComponent(humidity)}&wind=${encodeURIComponent(wind)}&rain=${encodeURIComponent(rain)}`;
-                });
-            } catch (error) {
-                console.error("Errore nel recupero dati:", error);
-            }
-        }
-        fetchWeatherData();
-    </script>
+    // Aggiunge il controllo scala (opzionale)
+    L.control.scale().addTo(map);
+
+    // Esempio di fetch API (Ecowitt)
+    async function fetchWeatherData() {
+      try {
+        let response = await fetch(
+          'https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all'
+        );
+        let data = await response.json();
+        console.log('Risposta API:', data);
+
+        // Estraggo la temperatura e altri dati
+        let outdoor = data.data.outdoor;
+        let tempF = outdoor.temperature.value;
+        let tempC = ((tempF - 32) * 5 / 9).toFixed(0);
+
+        // Crea un marker circolare verde
+        var circle = L.circleMarker([42.0699, 13.2531], {
+          radius: 12,
+          color: 'black',     // bordo nero
+          fillColor: 'green', // riempimento verde
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        // Aggiunge un tooltip permanente con la temperatura
+        circle.bindTooltip(
+          `<div style='font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC}</div>`,
+          {
+            permanent: true,
+            direction: 'center',
+            className: 'temp-label'
+          }
+        );
+
+      } catch (error) {
+        console.error('Errore nel recupero dati:', error);
+      }
+    }
+
+    fetchWeatherData();
+  </script>
 </body>
 </html>
