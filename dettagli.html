@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dettagli Meteo Ecowitt</title>
+</head>
+<body>
+  <h2>Dettagli Meteo Ecowitt</h2>
+  <div id="dati">
+    <p>Caricamento dati...</p>
+  </div>
+  <script>
+    async function fetchWeatherDetails() {
+      try {
+        let response = await fetch("https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all");
+        let data = await response.json();
+        console.log("Dettagli API:", data);
+        
+        let outdoor = data.data.outdoor;
+        
+        // Conversione della temperatura da Fahrenheit a Celsius
+        let tempC = ((outdoor.temperature.value - 32) * 5/9).toFixed(1);
+        let humidity = outdoor.humidity.value;
+        let windSpeed = outdoor.wind_speed ? outdoor.wind_speed.value : "N/D";
+        let windUnit = outdoor.wind_speed && outdoor.wind_speed.unit ? outdoor.wind_speed.unit : "";
+        let windDirection = outdoor.wind_direction ? outdoor.wind_direction.value : "N/D";
+        let windDirUnit = outdoor.wind_direction && outdoor.wind_direction.unit ? outdoor.wind_direction.unit : "";
+        let rain = outdoor.rain ? outdoor.rain.value : "N/D";
+        let rainUnit = outdoor.rain && outdoor.rain.unit ? outdoor.rain.unit : "";
+        let barometric = outdoor.barometric_pressure ? outdoor.barometric_pressure.value : "N/D";
+        let barometricUnit = outdoor.barometric_pressure && outdoor.barometric_pressure.unit ? outdoor.barometric_pressure.unit : "";
+        let uv = outdoor.uv ? outdoor.uv.value : "N/D";
+        let solar = outdoor.solar_radiation ? outdoor.solar_radiation.value : "N/D";
+        let solarUnit = outdoor.solar_radiation && outdoor.solar_radiation.unit ? outdoor.solar_radiation.unit : "";
+        
+        // Costruzione del contenuto HTML per mostrare i dati
+        let html = `
+          <p><strong>Temperatura:</strong> ${tempC} °C</p>
+          <p><strong>Umidità:</strong> ${humidity}%</p>
+          <p><strong>Vento:</strong> ${windSpeed} ${windUnit}</p>
+          <p><strong>Direzione Vento:</strong> ${windDirection} ${windDirUnit}</p>
+          <p><strong>Pioggia:</strong> ${rain} ${rainUnit}</p>
+          <p><strong>Pressione Barometrica:</strong> ${barometric} ${barometricUnit}</p>
+          <p><strong>Indice UV:</strong> ${uv}</p>
+          <p><strong>Radiazione Solare:</strong> ${solar} ${solarUnit}</p>
+        `;
+        document.getElementById("dati").innerHTML = html;
+      } catch (error) {
+        console.error("Errore nel recupero dei dettagli:", error);
+        document.getElementById("dati").innerHTML = "<p>Errore nel caricamento dei dati.</p>";
+      }
+    }
+    
+    fetchWeatherDetails();
+  </script>
+</body>
+</html>
