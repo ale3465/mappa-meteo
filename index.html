@@ -14,4 +14,53 @@
 
         async function fetchWeatherData() {
             try {
-                let response = await fetch("https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0
+                let response = await fetch("https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all");
+                let data = await response.json();
+                console.log("Risposta API:", data); // Controlla la struttura della risposta
+
+                // Assicurati che la struttura corrisponda: 
+                let outdoor = data.data.outdoor;
+                let tempF = outdoor.temperature.value;
+                let tempC = ((tempF - 32) * 5/9).toFixed(0);
+                let humidity = outdoor.humidity.value;
+                
+                // Usa fallback se le proprietà non esistono (modifica in base alla struttura effettiva)
+                let wind = outdoor.wind_speed ? outdoor.wind_speed.value : "non disponibile";
+                let rain = outdoor.rain ? outdoor.rain.value : "non disponibile";
+                
+                console.log("Dati estratti:", tempC, humidity, wind, rain);
+
+                // Crea il marker come cerchio con tooltip centrale che mostra solo la temperatura
+                var circle = L.circleMarker([42.0699, 13.2531], {
+                    radius: 12,
+                    color: "black",      // bordo nero
+                    fillColor: "green",  // riempimento verde
+                    fillOpacity: 0.8
+                }).addTo(map)
+                .bindTooltip(`<div style='color: white; font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC}</div>`, 
+                             { permanent: true, direction: "center", className: "temp-label" });
+                
+                // Al click sul marker, apri la pagina dei dettagli passando i dati nella query string
+                circle.on('click', function() {
+                    window.location.href = `dettagli.html?temp=${encodeURIComponent(tempC)}&humidity=${encodeURIComponent(humidity)}&wind=${encodeURIComponent(wind)}&rain=${encodeURIComponent(rain)}`;
+                });
+            } catch (error) {
+                console.error("Errore nel recupero dati:", error);
+            }
+        }
+
+        fetchWeatherData();
+    </script>
+    <style>
+        .temp-label {
+            background: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 14px;
+        }
+    </style>
+</body>
+</html>
