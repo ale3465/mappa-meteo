@@ -3,50 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mappa Meteo Ecowitt</title>
-  <!-- Foglio di stile Leaflet -->
+  <!-- Stili Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    /* Resetta i margini e riempimenti default del browser */
+    /* Reset e font base */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
       font-family: sans-serif;
     }
-
-    /* Contenitore principale */
-    main {
-      padding: 1rem 2rem;
+    body {
+      background-color: #f9f9f9;
     }
 
-    /* Titolo sopra la mappa */
-    h1 {
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
+    /* Titolo e sottotitolo */
+    .page-title {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .page-title h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.3rem;
       color: #444;
     }
+    .page-title p {
+      color: #666;
+      font-size: 0.9rem;
+    }
 
-    /* Mappa a schermo parziale (70% viewport) */
+    /* Contenitore della mappa */
     #map {
       width: 100%;
-      height: 70vh; /* Se vuoi a tutto schermo, imposta 100vh */
+      height: 60vh;
       border: 1px solid #ccc;
-      border-radius: 5px;
     }
 
-    /* Footer (opzionale) */
-    footer {
-      width: 100%;
-      text-align: center;
-      padding: 0.5rem;
-      background-color: #f2f2f2;
-      font-size: 0.9rem;
-      color: #777;
-    }
-
-    /* Tooltip per la temperatura (se usi circleMarker con bindTooltip) */
+    /* Tooltip per la temperatura */
     .temp-label {
       background: none !important;
       border: none !important;
@@ -57,56 +52,79 @@
       line-height: 14px;
       color: white;
     }
+
+    /* Footer (opzionale) */
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: #777;
+      background-color: #f2f2f2;
+    }
   </style>
 </head>
 <body>
 
-  <!-- CONTENUTO PRINCIPALE -->
-  <main>
-    <h1>Mappa live delle stazioni</h1>
-    <div id="map"></div>
-  </main>
+  <!-- TITOLO E SOTTOTITOLO -->
+  <div class="page-title">
+    <h1>Tagliacozzo centro</h1>
+    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
+  </div>
 
-  <!-- FOOTER (OPZIONALE) -->
+  <!-- MAPPA -->
+  <div id="map"></div>
+
+  <!-- FOOTER (opzionale) -->
   <footer>
     MeteoMarso © 2025 - Tutti i diritti riservati
   </footer>
 
   <script>
-    // Crea la mappa e imposta la vista iniziale
-    var map = L.map('map').setView([42.0699, 13.2531], 10);
+    // Parametri Ecowitt (personalizza con le tue chiavi e MAC)
+    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
+    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
+    const MAC = '7C:87:CE:BE:93:0F'; // Mac address della tua stazione
 
-    // Aggiunge il layer OSM
+    // Inizializza la mappa
+    var map = L.map('map').setView([42.0699, 13.2531], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: 'Mappa da © OpenStreetMap'
     }).addTo(map);
+    L.control.scale().addTo(map); // Scala (opzionale)
 
-    // Aggiunge il controllo scala (opzionale)
-    L.control.scale().addTo(map);
-
-    // Esempio di fetch API (Ecowitt)
+    // Recupera dati "realtime" per il marker
     async function fetchWeatherData() {
       try {
         let response = await fetch(
-          'https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all'
+          `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all`
         );
         let data = await response.json();
-        console.log('Risposta API:', data);
+        console.log('Risposta API realtime:', data);
 
-        // Estraggo la temperatura e altri dati
         let outdoor = data.data.outdoor;
         let tempF = outdoor.temperature.value;
-        let tempC = ((tempF - 32) * 5 / 9).toFixed(0);
+        let tempC = ((tempF - 32) * 5 / 9).toFixed(1);
 
-        // Crea un marker circolare verde
+        // Se la risposta contiene un timestamp, lo mostriamo
+        if (data.time) {
+          let updateTime = new Date(data.time * 1000);
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
+        } else {
+          // Se non esiste data.time, mostro l'ora corrente
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
+        }
+
+        // Crea marker circolare verde
         var circle = L.circleMarker([42.0699, 13.2531], {
           radius: 12,
-          color: 'black',     // bordo nero
-          fillColor: 'green', // riempimento verde
+          color: 'black',
+          fillColor: 'green',
           fillOpacity: 0.8
         }).addTo(map);
 
-        // Aggiunge un tooltip permanente con la temperatura
+        // Tooltip permanente con la temperatura
         circle.bindTooltip(
           `<div style='font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC}</div>`,
           {
@@ -116,8 +134,12 @@
           }
         );
 
+        // Al click sul marker, apriamo dettagli.html con parametri in query string
+        circle.on('click', function() {
+          window.location.href = `dettagli.html?mac=${encodeURIComponent(MAC)}`;
+        });
       } catch (error) {
-        console.error('Errore nel recupero dati:', error);
+        console.error('Errore nel recupero dati realtime:', error);
       }
     }
 
