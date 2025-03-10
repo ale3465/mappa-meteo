@@ -3,12 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mappa Meteo Ecowitt</title>
-  <!-- Stili Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    /* Reset e font base */
     * {
       margin: 0;
       padding: 0;
@@ -18,8 +15,6 @@
     body {
       background-color: #f9f9f9;
     }
-
-    /* Titolo e sottotitolo */
     .page-title {
       text-align: center;
       padding: 1rem 0;
@@ -33,15 +28,11 @@
       color: #666;
       font-size: 0.9rem;
     }
-
-    /* Contenitore della mappa */
     #map {
       width: 100%;
       height: 60vh;
       border: 1px solid #ccc;
     }
-
-    /* Tooltip per la temperatura */
     .temp-label {
       background: none !important;
       border: none !important;
@@ -49,10 +40,7 @@
       font-size: 14px;
       text-align: center;
       line-height: 14px;
-      /* Niente font-weight: bold; per rimuovere il grassetto */
     }
-
-    /* Footer (opzionale) */
     footer {
       text-align: center;
       padding: 0.5rem;
@@ -63,28 +51,21 @@
   </style>
 </head>
 <body>
-
-  <!-- TITOLO E SOTTOTITOLO -->
   <div class="page-title">
-    <h1>Tagliacozzo centro</h1>
+    <h1>Stazioni Meteo</h1>
     <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
   </div>
-
-  <!-- MAPPA -->
   <div id="map"></div>
-
-  <!-- FOOTER (opzionale) -->
   <footer>
     MeteoMarso © 2025 - Tutti i diritti riservati
   </footer>
-
   <script>
-    // Parametri Ecowitt (personalizza con le tue chiavi e MAC)
     const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-    const MAC = '7C:87:CE:BE:93:0F'; // Mac address della tua stazione
-
-    // Funzione di supporto per convertire HSL -> RGB (ritorna array [R, G, B] in 0..255)
+    const STATIONS = [
+      { mac: '7C:87:CE:BE:93:0F', coords: [42.0699, 13.2531] },
+      { mac: '80:64:6F:3E:F7:C3', coords: [42.0563550, 13.1950640] }
+    ];
     function hslToRgb(h, s, l) {
       let r, g, b;
       h /= 360;
@@ -97,7 +78,7 @@
         return p;
       };
       if (s === 0) {
-        r = g = b = l; // Grigio
+        r = g = b = l;
       } else {
         const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         const p = 2 * l - q;
@@ -111,113 +92,59 @@
         Math.round(b * 255)
       ];
     }
-
-    // Funzione che calcola fillColor e textColor in base alla temperatura
-    // Range: -20°C (porpora) -> 40°C (rosso)
     function getMarkerStyleForTemperature(tempC) {
       const minTemp = -20;
       const maxTemp = 40;
-
-      // Clampa la temperatura nel range
       if (tempC < minTemp) tempC = minTemp;
       if (tempC > maxTemp) tempC = maxTemp;
-
-      // ratio: quanto siamo tra -20 e 40 (0..1)
       const ratio = (tempC - minTemp) / (maxTemp - minTemp);
-
-      // Hue: da 270 (porpora) a 0 (rosso)
       const hue = 270 - 270 * ratio;
-      const sat = 1;   // 100%
-      const lig = 0.5; // 50%
-
-      // Colore HSL in stringa
       const fillColor = `hsl(${hue}, 100%, 50%)`;
-
-      // Converte in RGB per calcolare la luminosità percepita
-      const [r, g, b] = hslToRgb(hue, sat, lig);
+      const [r, g, b] = hslToRgb(hue, 1, 0.5);
       const brightness = (0.299*r + 0.587*g + 0.114*b) / 255;
-
-      // Scegli colore testo: se è scuro => testo bianco, se è chiaro => testo nero
       const textColor = brightness < 0.5 ? '#fff' : '#000';
-
       return { fillColor, textColor };
     }
-
-    // Inizializza la mappa
     const map = L.map('map').setView([42.0699, 13.2531], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: 'Mappa da © OpenStreetMap'
     }).addTo(map);
-    L.control.scale().addTo(map); // Scala (opzionale)
-
-    // Recupera dati "realtime" per il marker
+    L.control.scale().addTo(map);
     async function fetchWeatherData() {
-      try {
-        // Aggiungi &temp_unitid=1 se vuoi direttamente i °C dal server
-        let response = await fetch(
-          `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all&temp_unitid=1`
-        );
-        let data = await response.json();
-        console.log('Risposta API realtime:', data);
-
-        if (!data || data.code !== 0 || !data.data || !data.data.outdoor) {
-          console.error('Struttura dati non valida:', data);
-          return;
-        }
-
-        // Leggiamo la temperatura (in °C se usi temp_unitid=1)
-        let tempObj = data.data.outdoor.temperature;
-        let tempC = parseFloat(tempObj.value);
-        if (isNaN(tempC)) {
-          console.warn('Temperatura non valida:', tempObj.value);
-          tempC = 0; // fallback
-        }
-
-        // Se la risposta contiene un timestamp, lo mostriamo
-        if (data.time) {
-          let updateTime = new Date(data.time * 1000);
-          document.getElementById('last-update').textContent =
-            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
-        } else {
-          // Se non esiste data.time, mostro l'ora corrente
-          document.getElementById('last-update').textContent =
-            'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
-        }
-
-        // Calcola stile marker (colore di sfondo + colore testo)
-        const { fillColor, textColor } = getMarkerStyleForTemperature(tempC);
-
-        // Crea il marker circolare con radius 16, bordo nero sottile (weight=1)
-        const circle = L.circleMarker([42.0699, 13.2531], {
-          radius: 13,
-          color: 'black',         // colore del bordo
-          weight: 0.8,              // spessore del bordo
-          fillColor: fillColor,
-          fillOpacity: 0.8
-        }).addTo(map);
-
-        // Tooltip permanente con SOLO il numero (senza unità e senza grassetto)
-        circle.bindTooltip(
-          `<div style="font-size: 14px; text-align: center; line-height: 14px; color: ${textColor};">
-            ${tempC.toFixed(0)}
-          </div>`,
-          {
-            permanent: true,
-            direction: 'center',
-            className: 'temp-label'
+      for (const station of STATIONS) {
+        try {
+          let response = await fetch(
+            `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${station.mac}&call_back=all&temp_unitid=1`
+          );
+          let data = await response.json();
+          if (!data || data.code !== 0 || !data.data || !data.data.outdoor) return;
+          let tempC = parseFloat(data.data.outdoor.temperature.value);
+          if (isNaN(tempC)) tempC = 0;
+          if (data.time) {
+            document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + new Date(data.time * 1000).toLocaleString('it-IT');
           }
-        );
-
-        // Al click sul marker, apriamo dettagli.html con parametri in query string
-        circle.on('click', function() {
-          window.location.href = `dettagli.html?mac=${encodeURIComponent(MAC)}`;
-        });
-
-      } catch (error) {
-        console.error('Errore nel recupero dati realtime:', error);
+          const { fillColor, textColor } = getMarkerStyleForTemperature(tempC);
+          const circle = L.circleMarker(station.coords, {
+            radius: 13,
+            color: 'black',
+            weight: 0.8,
+            fillColor: fillColor,
+            fillOpacity: 0.8
+          }).addTo(map);
+          circle.bindTooltip(
+            `<div style="font-size: 14px; text-align: center; line-height: 14px; color: ${textColor};">
+              ${tempC.toFixed(0)}
+            </div>`,
+            { permanent: true, direction: 'center', className: 'temp-label' }
+          );
+          circle.on('click', function() {
+            window.location.href = `dettagli.html?mac=${encodeURIComponent(station.mac)}`;
+          });
+        } catch (error) {
+          console.error('Errore nel recupero dati realtime:', error);
+        }
       }
     }
-
     fetchWeatherData();
   </script>
 </body>
