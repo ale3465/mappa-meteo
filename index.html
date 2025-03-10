@@ -85,6 +85,26 @@
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
     const MAC = '7C:87:CE:BE:93:0F'; // Mac address della tua stazione
 
+    // Funzione per calcolare un colore in base alla temperatura (°C).
+    // -20°C --> porpora (hue=270), 40°C --> rosso (hue=0)
+    function getColorForTemperature(tempC) {
+      // Definisci i limiti
+      const minTemp = -20;
+      const maxTemp = 40;
+
+      // Clampa la temperatura se fuori dal range
+      if (tempC < minTemp) tempC = minTemp;
+      if (tempC > maxTemp) tempC = maxTemp;
+
+      // Calcola la frazione di dove ci troviamo tra -20 e 40
+      const ratio = (tempC - minTemp) / (maxTemp - minTemp); // valore tra 0 e 1
+
+      // Hue in HSL: da 270 (porpora) a 0 (rosso)
+      // Saturation e Lightness fissi: 100% e 50%
+      const hue = 270 - (270 * ratio); // scende da 270 a 0
+      return `hsl(${hue}, 100%, 50%)`;
+    }
+
     // Inizializza la mappa
     var map = L.map('map').setView([42.0699, 13.2531], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -95,15 +115,27 @@
     // Recupera dati "realtime" per il marker
     async function fetchWeatherData() {
       try {
+        // Qui puoi aggiungere i parametri di unità, se vuoi già i dati in °C.
+        // Esempio: &temp_unitid=1
         let response = await fetch(
-          `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all`
+          `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all&temp_unitid=1`
         );
         let data = await response.json();
         console.log('Risposta API realtime:', data);
 
-        let outdoor = data.data.outdoor;
-        let tempF = outdoor.temperature.value;
-        let tempC = ((tempF - 32) * 5 / 9).toFixed(1);
+        // Controllo della struttura
+        if (!data || data.code !== 0 || !data.data || !data.data.outdoor) {
+          console.error('Struttura dati non valida:', data);
+          return;
+        }
+
+        // Leggiamo la temperatura (in °C se hai usato temp_unitid=1)
+        let tempObj = data.data.outdoor.temperature;
+        let tempC = parseFloat(tempObj.value);
+        if (isNaN(tempC)) {
+          console.warn('Temperatura non valida:', tempObj.value);
+          tempC = 0; // fallback
+        }
 
         // Se la risposta contiene un timestamp, lo mostriamo
         if (data.time) {
@@ -116,17 +148,20 @@
             'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
         }
 
-        // Crea marker circolare verde
+        // Calcoliamo il colore del marker in base alla temperatura
+        let markerColor = getColorForTemperature(tempC);
+
+        // Crea il marker circolare con il colore calcolato
         var circle = L.circleMarker([42.0699, 13.2531], {
           radius: 12,
-          color: 'black',
-          fillColor: 'green',
+          color: 'black',        // bordo
+          fillColor: markerColor, 
           fillOpacity: 0.8
         }).addTo(map);
 
         // Tooltip permanente con la temperatura
         circle.bindTooltip(
-          `<div style='font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC}</div>`,
+          `<div style='font-weight: bold; font-size: 14px; text-align: center; line-height: 14px;'>${tempC.toFixed(1)}°C</div>`,
           {
             permanent: true,
             direction: 'center',
