@@ -3,8 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dettagli Meteo Ecowitt</title>
-  <!-- Chart.js può essere omesso se non fai più grafici -->
-  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
   <style>
     /* Reset e font base */
     * {
@@ -16,7 +14,6 @@
     body {
       background-color: #f9f9f9;
     }
-
     /* Titolo e sottotitolo */
     .page-title {
       text-align: center;
@@ -31,7 +28,6 @@
       color: #666;
       font-size: 0.9rem;
     }
-
     /* Card dei dettagli */
     #details-card {
       width: 90%;
@@ -69,7 +65,6 @@
     .info-item strong {
       color: #06776D;
     }
-
     /* Footer (opzionale) */
     footer {
       text-align: center;
@@ -96,7 +91,7 @@
         <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val"></span> hPa</div>
         <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val"></span> %</div>
         <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val"></span> mm</div>
-        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span> m/s</div>
+        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span> km/h</div>
       </div>
     </div>
   </div>
@@ -106,77 +101,72 @@
   </footer>
 
   <script>
-    // Leggiamo la mac dalla query string (se la passi da index.html con ?mac=...)
+    // Leggiamo il MAC dalla query string (se passato come ?mac=...)
     const params = new URLSearchParams(window.location.search);
     const MAC = params.get('mac') || '7C:87:CE:BE:93:0F';
 
-    // Parametri Ecowitt (personalizza con le tue chiavi)
+    // Imposta le chiavi Ecowitt (personalizza i valori)
     const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
 
-    // Funzione di inizializzazione
     async function initPage() {
-      await fetchWeatherData();   // Dati real-time
+      await fetchWeatherData();
     }
 
-    // Dati real-time per la panoramica
     async function fetchWeatherData() {
       try {
-        let url = https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all;
-        let response = await fetch(url);
-        let data = await response.json();
+        // Impostiamo i parametri per ricevere i dati nelle unità desiderate:
+        // temp_unitid=1 (℃), pressure_unitid=3 (hPa), wind_speed_unitid=7 (km/h), rainfall_unitid=12 (mm)
+        const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+        const response = await fetch(url);
+        const data = await response.json();
         console.log('Risposta API realtime:', data);
 
-        let outdoor = data.data.outdoor;
+        if (!data || data.code !== 0 || !data.data) {
+          console.error('Struttura dati non valida:', data);
+          return;
+        }
 
-        // Temperatura (converti da Fahrenheit a Celsius)
-        let tempF = outdoor.temperature.value;
-        let tempC = ((tempF - 32) * 5 / 9).toFixed(1);
+        // Temperatura: data.data.outdoor.temperature
+        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
+        const tempVal = tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
 
-        // Umidità
-        let humidity = outdoor.humidity.value;
+        // Umidità: data.data.outdoor.humidity
+        const humidityObj = data.data.outdoor && data.data.outdoor.humidity;
+        const humidityVal = humidityObj ? humidityObj.value : 'N/D';
 
-        // Precipitazioni (valore e unità)
-        // Assumiamo che la struttura sia: outdoor.rain.value e outdoor.rain.rainfall_unitid
-        let rainVal = outdoor.rain ? outdoor.rain.value.toFixed(1) : 'N/D';
-        
-        // Vento (valore e unità)
-        // Assumiamo che la struttura sia: outdoor.wind_speed.value e outdoor.wind_speed.wind_speed_unitid
-        let windVal = outdoor.wind_speed ? outdoor.wind_speed.value.toFixed(1) : 'N/D';
-        
-        // Pressione (valore e unità)
-        // Assumiamo che la struttura sia: outdoor.barometric_pressure.value e outdoor.barometric_pressure.pressure_unitid
-        let pressureVal = outdoor.barometric_pressure ? outdoor.barometric_pressure.value.toFixed(1) : 'N/D';
+        // Precipitazioni: data.data.rainfall.daily
+        const rainObj = data.data.rainfall && data.data.rainfall.daily;
+        const rainVal = rainObj ? parseFloat(rainObj.value).toFixed(2) : 'N/D';
 
-        // Aggiorna i campi nella card
-        document.getElementById('temp-val').textContent = tempC;
-        document.getElementById('humidity-val').textContent = humidity;
-        
-        // Precipitazioni, vento, pressione con unità
-        // (Se i codici unità corrispondono a mm, hPa, m/s, ecc., dovrai mappare i numeri a stringhe)
-        document.getElementById('rain-val').textContent = ${rainVal} (${rainUnitId});
-        document.getElementById('wind-val').textContent = ${windVal} (${windUnitId});
-        document.getElementById('pressure-val').textContent = ${pressureVal} (${pressureUnitId});
+        // Vento: data.data.wind.wind_speed
+        const windObj = data.data.wind && data.data.wind.wind_speed;
+        const windVal = windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
 
-        // Ora di aggiornamento
+        // Pressione: data.data.pressure.relative
+        const pressureObj = data.data.pressure && data.data.pressure.relative;
+        const pressureVal = pressureObj ? parseFloat(pressureObj.value).toFixed(2) : 'N/D';
+
+        // Aggiorna i campi nella card senza effettuare conversioni, in quanto l'API restituisce i dati nelle unità richieste
+        document.getElementById('temp-val').textContent = tempVal;
+        document.getElementById('humidity-val').textContent = humidityVal;
+        document.getElementById('rain-val').textContent = rainVal;
+        document.getElementById('wind-val').textContent = windVal;
+        document.getElementById('pressure-val').textContent = pressureVal;
+
+        // Aggiorna il campo dell'ultimo aggiornamento (timestamp Unix)
         if (data.time) {
-          let updateTime = new Date(data.time * 1000);
-          document.getElementById('last-update').textContent =
-            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
+          const updateTime = new Date(parseInt(data.time) * 1000);
+          document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
         } else {
-          document.getElementById('last-update').textContent =
-            'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
+          document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
         }
       } catch (error) {
-        console.error('Errore nel recupero dati realtime:', error);
+        console.error('Errore nel recupero dei dati:', error);
       }
     }
 
     // Avvio
-    initPage();
-  </script>
-</body>
-</html>
     initPage();
   </script>
 </body>
