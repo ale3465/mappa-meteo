@@ -1,56 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
+  <meta charset="UTF-8" />
   <title>Dettagli Meteo Ecowitt</title>
+  <!-- Chart.js può essere omesso se non fai più grafici -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+  <style>
+    /* Reset e font base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+    body {
+      background-color: #f9f9f9;
+    }
+
+    /* Titolo e sottotitolo */
+    .page-title {
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .page-title h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.3rem;
+      color: #444;
+    }
+    .page-title p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* Card dei dettagli */
+    #details-card {
+      width: 90%;
+      max-width: 600px;
+      margin: 1rem auto;
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .details-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
+    }
+    .details-header h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: #06776D;
+    }
+    .details-header .info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .info-item {
+      font-size: 1rem;
+      color: #444;
+    }
+    .info-item strong {
+      color: #06776D;
+    }
+
+    /* Footer (opzionale) */
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: #777;
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
-  <h2>Dettagli Meteo Ecowitt</h2>
-  <div id="dati">
-    <p>Caricamento dati...</p>
+
+  <div class="page-title">
+    <h1>Tagliacozzo centro</h1>
+    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
   </div>
+
+  <!-- CARD DETTAGLI -->
+  <div id="details-card">
+    <div class="details-header">
+      <h2>Panoramica</h2>
+      <div class="info">
+        <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val"></span> °C</div>
+        <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val"></span></div>
+        <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val"></span> %</div>
+        <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val"></span></div>
+        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    MeteoMarso © 2025 - Tutti i diritti riservati
+  </footer>
+
   <script>
-    async function fetchWeatherDetails() {
+    // Leggiamo la mac dalla query string (se la passi da index.html con ?mac=...)
+    const params = new URLSearchParams(window.location.search);
+    const MAC = params.get('mac') || '7C:87:CE:BE:93:0F';
+
+    // Parametri Ecowitt (personalizza con le tue chiavi)
+    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
+    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
+
+    // Funzione di inizializzazione
+    async function initPage() {
+      await fetchWeatherData();   // Dati real-time
+    }
+
+    // Dati real-time per la panoramica
+    async function fetchWeatherData() {
       try {
-        let response = await fetch("https://api.ecowitt.net/api/v3/device/real_time?application_key=2BE0A47E434D61D1E866A12B03C9574D&api_key=92e76b42-2b76-41c2-9b33-f81c50aaddca&mac=7C:87:CE:BE:93:0F&call_back=all");
+        let url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all`;
+        let response = await fetch(url);
         let data = await response.json();
-        console.log("Dettagli API:", data);
-        
+        console.log('Risposta API realtime:', data);
+
         let outdoor = data.data.outdoor;
-        
-        // Conversione della temperatura da Fahrenheit a Celsius
-        let tempC = ((outdoor.temperature.value - 32) * 5/9).toFixed(1);
+
+        // Temperatura (converti da Fahrenheit a Celsius)
+        let tempF = outdoor.temperature.value;
+        let tempC = ((tempF - 32) * 5 / 9).toFixed(1);
+
+        // Umidità
         let humidity = outdoor.humidity.value;
-        let windSpeed = outdoor.wind_speed ? outdoor.wind_speed.value : "N/D";
-        let windUnit = outdoor.wind_speed && outdoor.wind_speed.unit ? outdoor.wind_speed.unit : "";
-        let windDirection = outdoor.wind_direction ? outdoor.wind_direction.value : "N/D";
-        let windDirUnit = outdoor.wind_direction && outdoor.wind_direction.unit ? outdoor.wind_direction.unit : "";
-        let rain = outdoor.rain ? outdoor.rain.value : "N/D";
-        let rainUnit = outdoor.rain && outdoor.rain.unit ? outdoor.rain.unit : "";
-        let barometric = outdoor.barometric_pressure ? outdoor.barometric_pressure.value : "N/D";
-        let barometricUnit = outdoor.barometric_pressure && outdoor.barometric_pressure.unit ? outdoor.barometric_pressure.unit : "";
-        let uv = outdoor.uv ? outdoor.uv.value : "N/D";
-        let solar = outdoor.solar_radiation ? outdoor.solar_radiation.value : "N/D";
-        let solarUnit = outdoor.solar_radiation && outdoor.solar_radiation.unit ? outdoor.solar_radiation.unit : "";
+
+        // Precipitazioni (valore e unità)
+        // Assumiamo che la struttura sia: outdoor.rain.value e outdoor.rain.rainfall_unitid
+        let rainVal = outdoor.rain ? outdoor.rain.value.toFixed(1) : 'N/D';
+        let rainUnitId = outdoor.rain ? outdoor.rain.rainfall_unitid : '';
         
-        // Costruzione del contenuto HTML per mostrare i dati
-        let html = `
-          <p><strong>Temperatura:</strong> ${tempC} °C</p>
-          <p><strong>Umidità:</strong> ${humidity}%</p>
-          <p><strong>Vento:</strong> ${windSpeed} ${windUnit}</p>
-          <p><strong>Direzione Vento:</strong> ${windDirection} ${windDirUnit}</p>
-          <p><strong>Pioggia:</strong> ${rain} ${rainUnit}</p>
-          <p><strong>Pressione Barometrica:</strong> ${barometric} ${barometricUnit}</p>
-          <p><strong>Indice UV:</strong> ${uv}</p>
-          <p><strong>Radiazione Solare:</strong> ${solar} ${solarUnit}</p>
-        `;
-        document.getElementById("dati").innerHTML = html;
+        // Vento (valore e unità)
+        // Assumiamo che la struttura sia: outdoor.wind_speed.value e outdoor.wind_speed.wind_speed_unitid
+        let windVal = outdoor.wind_speed ? outdoor.wind_speed.value.toFixed(1) : 'N/D';
+        let windUnitId = outdoor.wind_speed ? outdoor.wind_speed.wind_speed_unitid : '';
+        
+        // Pressione (valore e unità)
+        // Assumiamo che la struttura sia: outdoor.barometric_pressure.value e outdoor.barometric_pressure.pressure_unitid
+        let pressureVal = outdoor.barometric_pressure ? outdoor.barometric_pressure.value.toFixed(1) : 'N/D';
+        let pressureUnitId = outdoor.barometric_pressure ? outdoor.barometric_pressure.pressure_unitid : '';
+
+        // Aggiorna i campi nella card
+        document.getElementById('temp-val').textContent = tempC;
+        document.getElementById('humidity-val').textContent = humidity;
+        
+        // Precipitazioni, vento, pressione con unità
+        // (Se i codici unità corrispondono a mm, hPa, m/s, ecc., dovrai mappare i numeri a stringhe)
+        document.getElementById('rain-val').textContent = `${rainVal} (${rainUnitId})`;
+        document.getElementById('wind-val').textContent = `${windVal} (${windUnitId})`;
+        document.getElementById('pressure-val').textContent = `${pressureVal} (${pressureUnitId})`;
+
+        // Ora di aggiornamento
+        if (data.time) {
+          let updateTime = new Date(data.time * 1000);
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
+        } else {
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
+        }
       } catch (error) {
-        console.error("Errore nel recupero dei dettagli:", error);
-        document.getElementById("dati").innerHTML = "<p>Errore nel caricamento dei dati.</p>";
+        console.error('Errore nel recupero dati realtime:', error);
       }
     }
-    
-    fetchWeatherDetails();
+
+    // Avvio
+    initPage();
   </script>
 </body>
 </html>
