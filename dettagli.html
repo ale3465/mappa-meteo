@@ -93,10 +93,10 @@
       <h2>Panoramica</h2>
       <div class="info">
         <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val"></span> °C</div>
-        <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val"></span></div>
+        <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val"></span> hPa</div>
         <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val"></span> %</div>
-        <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val"></span></div>
-        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span></div>
+        <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val"></span> mm</div>
+        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span> m/s</div>
       </div>
     </div>
   </div>
@@ -122,7 +122,7 @@
     // Dati real-time per la panoramica
     async function fetchWeatherData() {
       try {
-        let url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all`;
+        let url = https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all;
         let response = await fetch(url);
         let data = await response.json();
         console.log('Risposta API realtime:', data);
@@ -138,17 +138,15 @@
 
         // Precipitazioni (valore e unità)
         // Assumiamo che la struttura sia: outdoor.rain.value e outdoor.rain.rainfall_unitid
-        let rain-val = outdoor.rainfall.value;
+        let rainVal = outdoor.rain ? outdoor.rain.value.toFixed(1) : 'N/D';
         
         // Vento (valore e unità)
         // Assumiamo che la struttura sia: outdoor.wind_speed.value e outdoor.wind_speed.wind_speed_unitid
         let windVal = outdoor.wind_speed ? outdoor.wind_speed.value.toFixed(1) : 'N/D';
-        let windUnitId = outdoor.wind_speed ? outdoor.wind_speed.wind_speed_unitid : '';
         
         // Pressione (valore e unità)
         // Assumiamo che la struttura sia: outdoor.barometric_pressure.value e outdoor.barometric_pressure.pressure_unitid
         let pressureVal = outdoor.barometric_pressure ? outdoor.barometric_pressure.value.toFixed(1) : 'N/D';
-        let pressureUnitId = outdoor.barometric_pressure ? outdoor.barometric_pressure.pressure_unitid : '';
 
         // Aggiorna i campi nella card
         document.getElementById('temp-val').textContent = tempC;
@@ -156,9 +154,9 @@
         
         // Precipitazioni, vento, pressione con unità
         // (Se i codici unità corrispondono a mm, hPa, m/s, ecc., dovrai mappare i numeri a stringhe)
-        document.getElementById('rain-val').textContent = `${rainVal} (${rainUnitId})`;
-        document.getElementById('wind-val').textContent = `${windVal} (${windUnitId})`;
-        document.getElementById('pressure-val').textContent = `${pressureVal} (${pressureUnitId})`;
+        document.getElementById('rain-val').textContent = ${rainVal} (${rainUnitId});
+        document.getElementById('wind-val').textContent = ${windVal} (${windUnitId});
+        document.getElementById('pressure-val').textContent = ${pressureVal} (${pressureUnitId});
 
         // Ora di aggiornamento
         if (data.time) {
@@ -175,6 +173,10 @@
     }
 
     // Avvio
+    initPage();
+  </script>
+</body>
+</html>
     initPage();
   </script>
 </body>
