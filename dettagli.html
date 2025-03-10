@@ -138,8 +138,7 @@
 
         // Precipitazioni (valore e unità)
         // Assumiamo che la struttura sia: outdoor.rain.value e outdoor.rain.rainfall_unitid
-        let rainVal = outdoor.rain ? outdoor.rain.value.toFixed(1) : 'N/D';
-        let rainUnitId = outdoor.rain ? outdoor.rain.rainfall_unitid : '';
+        let rainVal = outdoor.rainfall.value;
         
         // Vento (valore e unità)
         // Assumiamo che la struttura sia: outdoor.wind_speed.value e outdoor.wind_speed.wind_speed_unitid
