@@ -2,9 +2,9 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Dettagli Meteo Ecowitt</title>
+  <title>Dati generali - MeteoMarsia</title>
   <style>
-    /* Reset e font base */
+    /* Reset e stili base */
     * {
       margin: 0;
       padding: 0;
@@ -13,50 +13,65 @@
     }
     body {
       background-color: #f9f9f9;
+      padding: 1rem;
     }
-    /* Titolo e sottotitolo */
+    /* Barra di navigazione */
+    nav {
+      width: 100%;
+      background: #06776D;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #055d5b;
+    }
+    /* Titolo della pagina */
     .page-title {
       text-align: center;
-      padding: 1rem 0;
+      margin-bottom: 1rem;
     }
     .page-title h1 {
-      font-size: 1.6rem;
-      margin-bottom: 0.3rem;
+      font-size: 1.8rem;
       color: #444;
+      margin-bottom: 0.3rem;
     }
     .page-title p {
       color: #666;
       font-size: 0.9rem;
     }
-    /* Card dei dettagli */
+    /* Scheda dati realtime */
     #details-card {
       width: 90%;
       max-width: 600px;
       margin: 1rem auto;
-      background-color: #fff;
+      background: #fff;
       border-radius: 6px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       padding: 1rem;
     }
     .details-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      text-align: center;
       margin-bottom: 1rem;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1rem;
     }
     .details-header h2 {
       font-size: 1.2rem;
-      margin-bottom: 0.5rem;
       color: #06776D;
     }
-    .details-header .info {
+    .info {
       display: flex;
       flex-wrap: wrap;
-      gap: 1.5rem;
+      gap: 1rem;
       justify-content: center;
-      margin-top: 0.5rem;
     }
     .info-item {
       font-size: 1rem;
@@ -65,108 +80,102 @@
     .info-item strong {
       color: #06776D;
     }
-    /* Footer (opzionale) */
     footer {
       text-align: center;
       padding: 0.5rem;
       font-size: 0.9rem;
       color: #777;
-      background-color: #f2f2f2;
+      background: #f2f2f2;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
+  <!-- Barra di navigazione -->
+  <nav>
+    <a href="dettagli.html">Dati generali</a>
+    <a href="dettagli2.html">Dati completi</a>
+    <a href="storico.html">Storico dati</a>
+  </nav>
 
+  <!-- Titolo della pagina -->
   <div class="page-title">
-    <h1>Tagliacozzo centro</h1>
+    <h1 id="station-name">Stazione Meteo</h1>
     <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
   </div>
 
-  <!-- CARD DETTAGLI -->
+  <!-- Scheda dati realtime -->
   <div id="details-card">
     <div class="details-header">
       <h2>Panoramica</h2>
-      <div class="info">
-        <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val"></span> °C</div>
-        <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val"></span> hPa</div>
-        <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val"></span> %</div>
-        <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val"></span> mm</div>
-        <div class="info-item"><strong>Vento:</strong> <span id="wind-val"></span> km/h</div>
-      </div>
+    </div>
+    <div class="info">
+      <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val">N/D</span> °C</div>
+      <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val">N/D</span> hPa</div>
+      <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val">N/D</span> %</div>
+      <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val">N/D</span> mm</div>
+      <div class="info-item"><strong>Vento:</strong> <span id="wind-val">N/D</span> km/h</div>
     </div>
   </div>
 
   <footer>
-    MeteoMarso © 2025 - Tutti i diritti riservati
+    MeteoMarsia © 2025 - Tutti i diritti riservati
   </footer>
 
   <script>
-    // Leggiamo il MAC dalla query string (se passato come ?mac=...)
-    const params = new URLSearchParams(window.location.search);
-    const MAC = params.get('mac') || '7C:87:CE:BE:93:0F';
-
-    // Imposta le chiavi Ecowitt (personalizza i valori)
     const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-
-    async function initPage() {
-      await fetchWeatherData();
+    const urlParams = new URLSearchParams(window.location.search);
+    const macParam = urlParams.get('mac');
+    const defaultMac = '7C:87:CE:BE:93:0F';
+    const MAC = macParam || defaultMac;
+    
+    let stationName = 'Stazione Meteo';
+    if (MAC === '7C:87:CE:BE:93:0F') {
+      stationName = 'Tagliacozzo centro';
+    } else if (MAC === '80:64:6F:3E:F7:C3') {
+      stationName = 'Marsia (AQ)';
     }
-
-    async function fetchWeatherData() {
+    document.getElementById('station-name').textContent = stationName;
+    
+    async function initPage() {
+      await fetchRealtimeData();
+    }
+    
+    async function fetchRealtimeData() {
       try {
-        // Impostiamo i parametri per ricevere i dati nelle unità desiderate:
-        // temp_unitid=1 (℃), pressure_unitid=3 (hPa), wind_speed_unitid=7 (km/h), rainfall_unitid=12 (mm)
-        const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+        const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
+          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
+          `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
         const response = await fetch(url);
         const data = await response.json();
-        console.log('Risposta API realtime:', data);
-
-        if (!data || data.code !== 0 || !data.data) {
-          console.error('Struttura dati non valida:', data);
-          return;
-        }
-
-        // Temperatura: data.data.outdoor.temperature
-        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
-        const tempVal = tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
-
-        // Umidità: data.data.outdoor.humidity
-        const humidityObj = data.data.outdoor && data.data.outdoor.humidity;
-        const humidityVal = humidityObj ? humidityObj.value : 'N/D';
-
-        // Precipitazioni: data.data.rainfall.daily
-        const rainObj = data.data.rainfall && data.data.rainfall.daily;
-        const rainVal = rainObj ? parseFloat(rainObj.value).toFixed(2) : 'N/D';
-
-        // Vento: data.data.wind.wind_speed
-        const windObj = data.data.wind && data.data.wind.wind_speed;
-        const windVal = windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
-
-        // Pressione: data.data.pressure.relative
-        const pressureObj = data.data.pressure && data.data.pressure.relative;
-        const pressureVal = pressureObj ? parseFloat(pressureObj.value).toFixed(2) : 'N/D';
-
-        // Aggiorna i campi nella card senza effettuare conversioni, in quanto l'API restituisce i dati nelle unità richieste
-        document.getElementById('temp-val').textContent = tempVal;
-        document.getElementById('humidity-val').textContent = humidityVal;
-        document.getElementById('rain-val').textContent = rainVal;
-        document.getElementById('wind-val').textContent = windVal;
-        document.getElementById('pressure-val').textContent = pressureVal;
-
-        // Aggiorna il campo dell'ultimo aggiornamento (timestamp Unix)
+        console.log('Dati realtime:', data);
+        if (!data || data.code !== 0 || !data.data) return;
         if (data.time) {
           const updateTime = new Date(parseInt(data.time) * 1000);
-          document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
-        } else {
-          document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + new Date().toLocaleString('it-IT');
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
         }
+        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
+        const humObj = data.data.outdoor && data.data.outdoor.humidity;
+        const pressObj = data.data.pressure && data.data.pressure.relative;
+        const rainObj = data.data.rainfall && data.data.rainfall.daily;
+        const windObj = data.data.wind && data.data.wind.wind_speed;
+        document.getElementById('temp-val').textContent =
+          tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
+        document.getElementById('humidity-val').textContent =
+          humObj ? humObj.value : 'N/D';
+        document.getElementById('pressure-val').textContent =
+          pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
+        document.getElementById('rain-val').textContent =
+          rainObj ? parseFloat(rainObj.value).toFixed(1) : 'N/D';
+        document.getElementById('wind-val').textContent =
+          windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
       } catch (error) {
-        console.error('Errore nel recupero dei dati:', error);
+        console.error('Errore nel recupero dati realtime:', error);
       }
     }
-
-    // Avvio
+    
     initPage();
   </script>
 </body>
