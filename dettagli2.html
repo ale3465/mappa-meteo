@@ -1,185 +1,94 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <title>Dati generali - MeteoMarsia</title>
-  <style>
-    /* Reset e stili base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: sans-serif;
-    }
-    body {
-      background-color: #f9f9f9;
-      padding: 1rem;
-    }
-    /* Barra di navigazione */
-    nav {
-      width: 100%;
-      background: #06776D;
-      padding: 0.5rem 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-    }
-    nav a:hover {
-      background: #055d5b;
-    }
-    /* Titolo della pagina */
-    .page-title {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .page-title h1 {
-      font-size: 1.8rem;
-      color: #444;
-      margin-bottom: 0.3rem;
-    }
-    .page-title p {
-      color: #666;
-      font-size: 0.9rem;
-    }
-    /* Scheda dati realtime */
-    #details-card {
-      width: 90%;
-      max-width: 600px;
-      margin: 1rem auto;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 1rem;
-    }
-    .details-header {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .details-header h2 {
-      font-size: 1.2rem;
-      color: #06776D;
-    }
-    .info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
-    .info-item {
-      font-size: 1rem;
-      color: #444;
-    }
-    .info-item strong {
-      color: #06776D;
-    }
-    footer {
-      text-align: center;
-      padding: 0.5rem;
-      font-size: 0.9rem;
-      color: #777;
-      background: #f2f2f2;
-      margin-top: 1rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettagli Meteo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+            display: inline-block;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .info {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
-  <!-- Barra di navigazione -->
-  <nav>
-    <a href="dettagli.html">Dati generali</a>
-    <a href="dettagli2.html">Dati completi</a>
-    <a href="storico.html">Storico dati</a>
-  </nav>
 
-  <!-- Titolo della pagina -->
-  <div class="page-title">
-    <h1 id="station-name">Stazione Meteo</h1>
-    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
-  </div>
-
-  <!-- Scheda dati realtime -->
-  <div id="details-card">
-    <div class="details-header">
-      <h2>Panoramica</h2>
+    <div class="navbar">
+        <a href="index.html">Home</a>
+        <a href="#">Storico</a>
+        <a href="#">Impostazioni</a>
     </div>
-    <div class="info">
-      <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val">N/D</span> °C</div>
-      <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val">N/D</span> hPa</div>
-      <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val">N/D</span> %</div>
-      <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val">N/D</span> mm</div>
-      <div class="info-item"><strong>Vento:</strong> <span id="wind-val">N/D</span> km/h</div>
+
+    <div class="container">
+        <h2>Dettagli Meteo</h2>
+        <p class="info">Temperatura attuale: <span class="highlight" id="temp"></span>°C</p>
+        <p class="info">Temperatura minima: <span class="highlight" id="tempMin"></span>°C</p>
+        <p class="info">Temperatura massima: <span class="highlight" id="tempMax"></span>°C</p>
+        <p class="info">Umidità: <span class="highlight" id="humidity"></span>%</p>
+        <p class="info">Pressione: <span class="highlight" id="pressure"></span> hPa</p>
     </div>
-  </div>
 
-  <footer>
-    MeteoMarsia © 2025 - Tutti i diritti riservati
-  </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const params = new URLSearchParams(window.location.search);
+            const temp = params.get("temp");
+            const humidity = params.get("humidity");
+            const pressure = params.get("pressure");
 
-  <script>
-    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
-    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-    
-    // Estrai MAC dalla query string o usa default
-    const urlParams = new URLSearchParams(window.location.search);
-    const macParam = urlParams.get('mac');
-    const defaultMac = '7C:87:CE:BE:93:0F';
-    const MAC = macParam || defaultMac;
-    
-    // Imposta il nome della stazione
-    let stationName = 'Stazione Meteo';
-    if (MAC === '7C:87:CE:BE:93:0F') {
-      stationName = 'Tagliacozzo centro';
-    } else if (MAC === '80:64:6F:3E:F7:C3') {
-      stationName = 'Marsia (AQ)';
-    }
-    document.getElementById('station-name').textContent = stationName;
-    
-    async function initPage() {
-      await fetchRealtimeData();
-    }
-    
-    async function fetchRealtimeData() {
-      try {
-        const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
-          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
-          `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Dati realtime:', data);
-        if (!data || data.code !== 0 || !data.data) return;
-        if (data.time) {
-          const updateTime = new Date(parseInt(data.time) * 1000);
-          document.getElementById('last-update').textContent =
-            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
-        }
-        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
-        const humObj = data.data.outdoor && data.data.outdoor.humidity;
-        const pressObj = data.data.pressure && data.data.pressure.relative;
-        const rainObj = data.data.rainfall && data.data.rainfall.daily;
-        const windObj = data.data.wind && data.data.wind.wind_speed;
-        document.getElementById('temp-val').textContent =
-          tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
-        document.getElementById('humidity-val').textContent =
-          humObj ? humObj.value : 'N/D';
-        document.getElementById('pressure-val').textContent =
-          pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
-        document.getElementById('rain-val').textContent =
-          rainObj ? parseFloat(rainObj.value).toFixed(1) : 'N/D';
-        document.getElementById('wind-val').textContent =
-          windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
-      } catch (error) {
-        console.error('Errore nel recupero dati realtime:', error);
-      }
-    }
-    
-    initPage();
-  </script>
+            // Recupera i dati storici dal localStorage
+            const storedData = localStorage.getItem("storicoDati");
+            let storico = storedData ? JSON.parse(storedData) : [];
+
+            let minTemp = Math.min(...storico.map(d => d.temp));
+            let maxTemp = Math.max(...storico.map(d => d.temp));
+
+            // Aggiorna la pagina con i dati
+            document.getElementById("temp").textContent = temp || "N/A";
+            document.getElementById("humidity").textContent = humidity || "N/A";
+            document.getElementById("pressure").textContent = pressure || "N/A";
+            document.getElementById("tempMin").textContent = isFinite(minTemp) ? minTemp.toFixed(1) : "N/A";
+            document.getElementById("tempMax").textContent = isFinite(maxTemp) ? maxTemp.toFixed(1) : "N/A";
+        });
+    </script>
+
 </body>
 </html>
