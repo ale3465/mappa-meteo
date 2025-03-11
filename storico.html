@@ -2,46 +2,77 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Dati Storici Ecowitt</title>
+  <title>Storico dati - MeteoMarsia</title>
   <style>
-    /* Stili di base */
+    /* Reset e stili base */
     * {
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
       font-family: sans-serif;
     }
     body {
       background-color: #f9f9f9;
       padding: 1rem;
     }
-    h1 {
+    /* Barra di navigazione */
+    nav {
+      width: 100%;
+      background: #06776D;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #055d5b;
+    }
+    /* Titolo della pagina */
+    .page-title {
       text-align: center;
       margin-bottom: 1rem;
-      color: #444;
     }
+    .page-title h1 {
+      font-size: 1.8rem;
+      color: #444;
+      margin-bottom: 0.3rem;
+    }
+    .page-title p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    /* Form per dati storici */
     .form-container {
-      max-width: 600px;
-      margin: 0 auto 1rem;
       background: #fff;
       padding: 1rem;
       border-radius: 6px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+      max-width: 600px;
+      margin: 0 auto 1rem;
     }
-    label {
+    .form-container label {
       display: block;
       margin: 0.5rem 0 0.2rem;
       color: #06776D;
       font-weight: bold;
     }
-    input[type='text'] {
+    .form-container input[type="text"] {
       width: 100%;
       padding: 0.4rem;
       margin-bottom: 0.5rem;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    button {
+    .form-container button {
       background: #06776D;
       color: #fff;
       padding: 0.5rem 1rem;
@@ -49,7 +80,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    button:hover {
+    .form-container button:hover {
       background: #055d5b;
     }
     table {
@@ -59,48 +90,59 @@
       background: #fff;
       border-radius: 6px;
       overflow: hidden;
+      max-width: 1100px;
+      margin: 0 auto;
     }
     th, td {
-      text-align: left;
       padding: 0.6rem;
       border-bottom: 1px solid #eee;
+      text-align: left;
     }
     th {
-      background-color: #06776D;
+      background: #06776D;
       color: #fff;
-      font-weight: normal;
     }
     tr:hover {
-      background-color: #f5f5f5;
+      background: #f5f5f5;
     }
     .msg {
       text-align: center;
       margin-top: 1rem;
       color: #444;
     }
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: #777;
+      background: #f2f2f2;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
+  <!-- Barra di navigazione -->
+  <nav>
+    <a href="dettagli.html">Dati generali</a>
+    <a href="dettagli2.html">Dati completi</a>
+    <a href="storico.html">Storico dati</a>
+  </nav>
 
-  <h1>Dati Storici Ecowitt</h1>
-
-  <div class="form-container">
-    <!-- Form per impostare l'intervallo di date -->
-    <label for="startDate">Data e ora inizio (ISO8601):</label>
-    <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
-
-    <label for="endDate">Data e ora fine (ISO8601):</label>
-    <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
-
-    <label for="mac">MAC Address:</label>
-    <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
-
-    <button id="loadDataBtn">Carica Dati</button>
+  <div class="page-title">
+    <h1 id="station-name">Stazione Meteo</h1>
+    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
   </div>
 
-  <div class="msg" id="message"></div>
-
-  <!-- Tabella con i dati storici -->
+  <div class="form-container">
+    <label for="startDate">Data e ora inizio (ISO8601):</label>
+    <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
+    <label for="endDate">Data e ora fine (ISO8601):</label>
+    <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
+    <label for="mac">MAC Address:</label>
+    <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
+    <button id="loadHistoryBtn">Carica Dati Storici</button>
+  </div>
+  <div class="msg" id="history-msg"></div>
   <table id="history-table" style="display: none;">
     <thead>
       <tr>
@@ -112,97 +154,106 @@
     <tbody id="history-body"></tbody>
   </table>
 
+  <footer>
+    MeteoMarsia © 2025 - Tutti i diritti riservati
+  </footer>
+
   <script>
-    // Imposta le chiavi Ecowitt (personalizza i valori)
     const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-
-    // Al click sul pulsante, carichiamo i dati storici
-    document.getElementById('loadDataBtn').addEventListener('click', async () => {
-      // Leggiamo i parametri dal form
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const macParam = urlParams.get('mac');
+    const defaultMac = '7C:87:CE:BE:93:0F';
+    const MAC = macParam || defaultMac;
+    
+    let stationName = 'Stazione Meteo';
+    if (MAC === '7C:87:CE:BE:93:0F') {
+      stationName = 'Tagliacozzo centro';
+    } else if (MAC === '80:64:6F:3E:F7:C3') {
+      stationName = 'Marsia (AQ)';
+    }
+    document.getElementById('station-name').textContent = stationName;
+    
+    async function initPage() {
+      await fetchRealtimeData();
+      document.getElementById('mac').value = MAC;
+    }
+    
+    async function fetchRealtimeData() {
+      try {
+         const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
+           `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
+           `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+         const response = await fetch(url);
+         const data = await response.json();
+         console.log('Dati realtime:', data);
+         if (!data || data.code !== 0 || !data.data) return;
+         if (data.time) {
+            const updateTime = new Date(parseInt(data.time)*1000);
+            document.getElementById('last-update').textContent =
+              'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
+         }
+         // Se vuoi aggiornare eventuali dati realtime nella pagina storico, puoi farlo qui.
+      } catch (error) {
+         console.error('Errore nel recupero dati realtime:', error);
+      }
+    }
+    
+    document.getElementById('loadHistoryBtn').addEventListener('click', async () => {
       const startDate = document.getElementById('startDate').value.trim();
       const endDate = document.getElementById('endDate').value.trim();
-      const mac = document.getElementById('mac').value.trim() || '7C:87:CE:BE:93:0F';
-
+      const macInput = document.getElementById('mac').value.trim();
       if (!startDate || !endDate) {
-        alert('Inserisci startDate e endDate validi');
-        return;
+         alert('Inserisci startDate e endDate validi');
+         return;
       }
-
-      // Messaggio di caricamento
-      document.getElementById('message').textContent = 'Caricamento in corso...';
+      document.getElementById('history-msg').textContent = 'Caricamento in corso...';
       document.getElementById('history-table').style.display = 'none';
-
       try {
-        // Esempio: cicliamo su 'outdoor.temperature' e 'outdoor.humidity'
-        // Puoi aggiungere altri campi in call_back, separati da virgole
-        // Impostiamo le unità di misura in °C, hPa, km/h, mm se vuoi
-        const url = `https://api.ecowitt.net/api/v3/device/history?` +
-          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
-          `&mac=${encodeURIComponent(mac)}` +
-          `&start_date=${encodeURIComponent(startDate)}` +
-          `&end_date=${encodeURIComponent(endDate)}` +
-          `&cycle_type=auto` +
-          `&call_back=outdoor.temperature,outdoor.humidity` +
-          `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Risposta API history:', data);
-
-        if (!data || data.code !== 0 || !data.data) {
-          document.getElementById('message').textContent = 'Errore nel recupero dati storici';
-          return;
-        }
-
-        // Puliamo la tabella
-        const tableBody = document.getElementById('history-body');
-        tableBody.innerHTML = '';
-
-        // Ricaviamo i riferimenti a temperature e humidity
-        // Esempio: data.data.outdoor.temperature.list, data.data.outdoor.humidity.list
-        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
-        const humObj = data.data.outdoor && data.data.outdoor.humidity;
-
-        if (!tempObj || !tempObj.list || !humObj || !humObj.list) {
-          document.getElementById('message').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
-          return;
-        }
-
-        const tempList = tempObj.list;  // Oggetto con chi=timestamp, val=temperatura
-        const humList = humObj.list;    // Oggetto con chi=timestamp, val=umidità
-
-        // Ciascun 'list' è un oggetto: { '1647993600': '44.3', '1648008000': '58.0', ... }
-        // Cicliamo su tempList e usiamo la stessa chiave per trovare l'umidità
-        // NOTA: Non è garantito che abbiano le stesse chiavi esatte, ma di solito corrispondono
-        const tempKeys = Object.keys(tempList).sort(); // Ordina i timestamp
-
-        // Popoliamo la tabella
-        tempKeys.forEach(ts => {
-          const tempVal = parseFloat(tempList[ts]).toFixed(1);
-          const humVal = humList[ts] ? parseFloat(humList[ts]).toFixed(0) : 'N/D';
-
-          // ts è un timestamp in secondi, convertiamolo in data leggibile
-          const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
-
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${dateStr}</td>
-            <td>${tempVal}</td>
-            <td>${humVal}</td>
-          `;
-          tableBody.appendChild(row);
-        });
-
-        // Mostriamo la tabella
-        document.getElementById('history-table').style.display = 'table';
-        document.getElementById('message').textContent = '';
-
+         const url = `https://api.ecowitt.net/api/v3/device/history?` +
+           `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
+           `&mac=${encodeURIComponent(macInput)}` +
+           `&start_date=${encodeURIComponent(startDate)}` +
+           `&end_date=${encodeURIComponent(endDate)}` +
+           `&cycle_type=auto` +
+           `&call_back=outdoor.temperature,outdoor.humidity` +
+           `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+         const response = await fetch(url);
+         const data = await response.json();
+         console.log('Dati storici:', data);
+         if (!data || data.code !== 0 || !data.data) {
+            document.getElementById('history-msg').textContent = 'Errore nel recupero dati storici';
+            return;
+         }
+         const tableBody = document.getElementById('history-body');
+         tableBody.innerHTML = '';
+         const tempObjHistory = data.data.outdoor && data.data.outdoor.temperature;
+         const humObjHistory = data.data.outdoor && data.data.outdoor.humidity;
+         if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) {
+            document.getElementById('history-msg').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
+            return;
+         }
+         const tempList = tempObjHistory.list;
+         const humList = humObjHistory.list;
+         const tempKeys = Object.keys(tempList).sort();
+         tempKeys.forEach(ts => {
+            const tempVal = parseFloat(tempList[ts]).toFixed(1);
+            const humVal = humList[ts] ? parseFloat(humList[ts]).toFixed(0) : 'N/D';
+            const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
+            const row = document.createElement('tr');
+            row.innerHTML = `<td>${dateStr}</td><td>${tempVal}</td><td>${humVal}</td>`;
+            tableBody.appendChild(row);
+         });
+         document.getElementById('history-table').style.display = 'table';
+         document.getElementById('history-msg').textContent = '';
       } catch (error) {
-        console.error('Errore nel recupero dati storici:', error);
-        document.getElementById('message').textContent = 'Si è verificato un errore';
+         console.error('Errore nel recupero dati storici:', error);
+         document.getElementById('history-msg').textContent = 'Si è verificato un errore';
       }
     });
+    
+    initPage();
   </script>
 </body>
 </html>
