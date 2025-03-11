@@ -81,66 +81,6 @@
       margin-bottom: 0.3rem;
       line-height: 1.2rem;
     }
-    /* Sezione dati storici separata */
-    .history-section {
-      margin: 2rem auto;
-    }
-    .form-container {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 1rem;
-    }
-    .form-container label {
-      display: block;
-      margin: 0.5rem 0 0.2rem;
-      color: #06776D;
-      font-weight: bold;
-    }
-    .form-container input[type="text"] {
-      width: 100%;
-      padding: 0.4rem;
-      margin-bottom: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .form-container button {
-      background: #06776D;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .form-container button:hover {
-      background: #055d5b;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      background: #fff;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 0.6rem;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-    th {
-      background: #06776D;
-      color: #fff;
-    }
-    tr:hover {
-      background: #f5f5f5;
-    }
-    .msg {
-      text-align: center;
-      margin-top: 1rem;
-      color: #444;
-    }
     footer {
       text-align: center;
       padding: 0.5rem;
@@ -213,7 +153,6 @@
         <p>Raffica: <span id="wind-gust">N/D</span> km/h</p>
         <p>Direzione: <span id="wind-direction">N/D</span> °</p>
       </div>
-
       <!-- CARD PRESSIONE -->
       <div class="card">
         <h3>Pressione</h3>
@@ -221,7 +160,7 @@
       </div>
     </div>
 
-    <!-- RIGA 4: RADIAZIONE SOLARE (scheda "Varie" rimossa) -->
+    <!-- RIGA 4: RADIAZIONE SOLARE -->
     <div class="row">
       <div class="card">
         <h3>Radiazione solare</h3>
@@ -231,46 +170,20 @@
     </div>
   </div>
 
-  <!-- Sezione Dati Storici Separata -->
-  <div class="history-section">
-    <h2 style="text-align: center; color: #06776D;">Dati Storici</h2>
-    <div class="form-container">
-      <label for="startDate">Data e ora inizio (ISO8601):</label>
-      <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
-      <label for="endDate">Data e ora fine (ISO8601):</label>
-      <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
-      <label for="mac">MAC Address:</label>
-      <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
-      <button id="loadHistoryBtn">Carica Dati Storici</button>
-    </div>
-    <div class="msg" id="history-msg"></div>
-    <table id="history-table" style="display: none;">
-      <thead>
-        <tr>
-          <th>Data/ora</th>
-          <th>Temperatura (°C)</th>
-          <th>Umidità (%)</th>
-        </tr>
-      </thead>
-      <tbody id="history-body"></tbody>
-    </table>
-  </div>
-
   <footer>
     MeteoMarsia © 2025 - Tutti i diritti riservati
   </footer>
 
   <script>
-    // Chiavi Ecowitt e parametri
+    // Chiavi Ecowitt
     const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
     const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-
     // Estrai MAC dalla query string o usa default
     const urlParams = new URLSearchParams(window.location.search);
     const macParam = urlParams.get('mac');
     const defaultMac = '7C:87:CE:BE:93:0F';
     const MAC = macParam || defaultMac;
-
+    
     // Imposta il nome della stazione
     let stationName = 'Stazione Meteo';
     if (MAC === '7C:87:CE:BE:93:0F') {
@@ -279,13 +192,13 @@
       stationName = 'Marsia (AQ)';
     }
     document.getElementById('station-name').textContent = stationName;
-
-    // Inizializza la pagina (carica dati realtime e imposta il campo MAC nel form storico)
+    
+    // Inizializza la pagina: carica i dati realtime e i min/max calcolati
     async function initPage() {
       await fetchRealtimeData();
-      document.getElementById('mac').value = MAC;
+      await fetchHistoryForMinMax();
     }
-
+    
     // Funzione per caricare i dati realtime
     async function fetchRealtimeData() {
       try {
@@ -301,92 +214,122 @@
           document.getElementById('last-update').textContent =
             'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
         }
-        // Aggiorna i campi realtime (solo valori attuali)
-        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
-        const humObj = data.data.outdoor && data.data.outdoor.humidity;
-        const pressObj = data.data.pressure && data.data.pressure.relative;
-        const rainObj = data.data.rainfall && data.data.rainfall.daily;
-        const windObj = data.data.wind && data.data.wind.wind_speed;
+        const outdoor = data.data.outdoor || {};
+        const pressureData = data.data.pressure || {};
+        const rainfallData = data.data.rainfall || {};
+        const windData = data.data.wind || {};
+        const solarData = data.data.solar_and_uvi || {};
+        
+        // Aggiorna Temperatura e Umidità attuali
+        const tempObj = outdoor.temperature;
+        const humObj = outdoor.humidity;
         document.getElementById('temp-now').textContent =
           tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
         document.getElementById('humidity-now').textContent =
           humObj ? humObj.value : 'N/D';
-        document.getElementById('pressure-val').textContent =
+        
+        // Aggiorna Pressione
+        const pressObj = pressureData.relative;
+        document.getElementById('pressure-now').textContent =
           pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
-        document.getElementById('rain-val').textContent =
-          rainObj ? parseFloat(rainObj.value).toFixed(1) : 'N/D';
-        document.getElementById('wind-val').textContent =
-          windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
+        
+        // Aggiorna Pioggia
+        const rainDaily = rainfallData.daily;
+        document.getElementById('rain-daily').textContent =
+          rainDaily ? parseFloat(rainDaily.value).toFixed(1) : 'N/D';
+        const rainEvent = rainfallData.event;
+        document.getElementById('rain-event').textContent =
+          rainEvent ? parseFloat(rainEvent.value).toFixed(1) : 'N/D';
+        const rainHourly = rainfallData.hourly;
+        document.getElementById('rain-hourly').textContent =
+          rainHourly ? parseFloat(rainHourly.value).toFixed(1) : 'N/D';
+        const rainWeekly = rainfallData.weekly;
+        document.getElementById('rain-weekly').textContent =
+          rainWeekly ? parseFloat(rainWeekly.value).toFixed(1) : 'N/D';
+        const rainMonthly = rainfallData.monthly;
+        document.getElementById('rain-monthly').textContent =
+          rainMonthly ? parseFloat(rainMonthly.value).toFixed(1) : 'N/D';
+        const rainYearly = rainfallData.yearly;
+        document.getElementById('rain-yearly').textContent =
+          rainYearly ? parseFloat(rainYearly.value).toFixed(1) : 'N/D';
+        
+        // Aggiorna Vento
+        const windSpeed = windData.wind_speed;
+        document.getElementById('wind-speed').textContent =
+          windSpeed ? parseFloat(windSpeed.value).toFixed(1) : 'N/D';
+        const windGust = windData.wind_gust;
+        document.getElementById('wind-gust').textContent =
+          windGust ? parseFloat(windGust.value).toFixed(1) : 'N/D';
+        const windDir = windData.wind_direction;
+        document.getElementById('wind-direction').textContent =
+          windDir ? parseFloat(windDir.value).toFixed(0) : 'N/D';
+        
+        // Aggiorna Radiazione solare e UVI
+        const solarObj = solarData.solar;
+        document.getElementById('solar-now').textContent =
+          solarObj ? parseFloat(solarObj.value).toFixed(1) : 'N/D';
+        const uviObj = solarData.uvi;
+        document.getElementById('uvi-now').textContent =
+          uviObj ? parseFloat(uviObj.value).toFixed(1) : 'N/D';
+        
       } catch (error) {
         console.error('Errore nel recupero dati realtime:', error);
       }
     }
-
-    // Gestione dei dati storici e calcolo min/max
-    document.getElementById('loadHistoryBtn').addEventListener('click', async () => {
-      const startDate = document.getElementById('startDate').value.trim();
-      const endDate = document.getElementById('endDate').value.trim();
-      const macInput = document.getElementById('mac').value.trim();
-      if (!startDate || !endDate) {
-        alert('Inserisci startDate e endDate validi');
-        return;
-      }
-      document.getElementById('history-msg').textContent = 'Caricamento in corso...';
-      document.getElementById('history-table').style.display = 'none';
+    
+    // Funzione per ottenere i valori min e max di Temperatura e Umidità dai dati storici (ultime 24 ore)
+    async function fetchHistoryForMinMax() {
       try {
+        const now = new Date();
+        const past = new Date(now.getTime() - (24 * 60 * 60 * 1000)); // 24 ore fa
+        
+        // Formatta le date in "YYYY-MM-DD HH:MM:SS"
+        function formatDate(d) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          const ss = String(d.getSeconds()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        }
+        
+        const startDate = formatDate(past);
+        const endDate = formatDate(now);
+        
         const url = `https://api.ecowitt.net/api/v3/device/history?` +
                     `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
-                    `&mac=${encodeURIComponent(macInput)}` +
+                    `&mac=${encodeURIComponent(MAC)}` +
                     `&start_date=${encodeURIComponent(startDate)}` +
                     `&end_date=${encodeURIComponent(endDate)}` +
                     `&cycle_type=auto` +
                     `&call_back=outdoor.temperature,outdoor.humidity` +
-                    `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+                    `&temp_unitid=1`;
         const response = await fetch(url);
         const data = await response.json();
-        console.log('Dati storici:', data);
-        if (!data || data.code !== 0 || !data.data) {
-          document.getElementById('history-msg').textContent = 'Errore nel recupero dati storici';
-          return;
-        }
-        const tableBody = document.getElementById('history-body');
-        tableBody.innerHTML = '';
+        console.log('Dati storici per min/max:', data);
+        if (!data || data.code !== 0 || !data.data) return;
         const tempObjHistory = data.data.outdoor && data.data.outdoor.temperature;
         const humObjHistory = data.data.outdoor && data.data.outdoor.humidity;
-        if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) {
-          document.getElementById('history-msg').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
-          return;
-        }
-        const tempList = Object.values(tempObjHistory.list).map(x => parseFloat(x));
-        const humList = Object.values(humObjHistory.list).map(x => parseFloat(x));
-        // Calcola min e max
-        const minTemp = Math.min(...tempList);
-        const maxTemp = Math.max(...tempList);
-        const minHum = Math.min(...humList);
-        const maxHum = Math.max(...humList);
-        // Aggiorna le card realtime con min e max
-        document.getElementById('temp-min').textContent = isFinite(minTemp) ? minTemp.toFixed(1) : 'N/D';
-        document.getElementById('temp-max').textContent = isFinite(maxTemp) ? maxTemp.toFixed(1) : 'N/D';
-        document.getElementById('humidity-min').textContent = isFinite(minHum) ? minHum.toFixed(0) : 'N/D';
-        document.getElementById('humidity-max').textContent = isFinite(maxHum) ? maxHum.toFixed(0) : 'N/D';
-
-        // Popola la tabella storica
-        const tempKeys = Object.keys(tempObjHistory.list).sort((a, b) => a - b);
-        tempKeys.forEach(ts => {
-          const tempVal = parseFloat(tempObjHistory.list[ts]).toFixed(1);
-          const humVal = humObjHistory.list[ts] ? parseFloat(humObjHistory.list[ts]).toFixed(0) : 'N/D';
-          const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${dateStr}</td><td>${tempVal}</td><td>${humVal}</td>`;
-          tableBody.appendChild(row);
-        });
-        document.getElementById('history-table').style.display = 'table';
-        document.getElementById('history-msg').textContent = '';
+        if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) return;
+        
+        // Converti i valori in array numerici
+        const tempValues = Object.values(tempObjHistory.list).map(v => parseFloat(v)).filter(v => !isNaN(v));
+        const humValues = Object.values(humObjHistory.list).map(v => parseFloat(v)).filter(v => !isNaN(v));
+        
+        const minTemp = tempValues.length ? Math.min(...tempValues) : null;
+        const maxTemp = tempValues.length ? Math.max(...tempValues) : null;
+        const minHum = humValues.length ? Math.min(...humValues) : null;
+        const maxHum = humValues.length ? Math.max(...humValues) : null;
+        
+        document.getElementById('temp-min').textContent = (minTemp !== null) ? minTemp.toFixed(1) : 'N/D';
+        document.getElementById('temp-max').textContent = (maxTemp !== null) ? maxTemp.toFixed(1) : 'N/D';
+        document.getElementById('humidity-min').textContent = (minHum !== null) ? minHum.toFixed(0) : 'N/D';
+        document.getElementById('humidity-max').textContent = (maxHum !== null) ? maxHum.toFixed(0) : 'N/D';
       } catch (error) {
-        console.error('Errore nel recupero dati storici:', error);
-        document.getElementById('history-msg').textContent = 'Si è verificato un errore';
+        console.error('Errore nel recupero dati storici per min/max:', error);
       }
-    });
+    }
     
     initPage();
   </script>
