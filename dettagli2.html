@@ -73,15 +73,108 @@
       background-color: #f2f2f2;
       margin-top: 1rem;
     }
+     nav {
+      width: 100%;
+      background: #06776D;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #055d5b;
+    }
+    /* Titolo della pagina */
+    .page-title {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .page-title h1 {
+      font-size: 1.8rem;
+      color: #444;
+      margin-bottom: 0.3rem;
+    }
+    .page-title p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    /* Scheda dati realtime */
+    #details-card {
+      width: 90%;
+      max-width: 600px;
+      margin: 1rem auto;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .details-header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .details-header h2 {
+      font-size: 1.2rem;
+      color: #06776D;
+    }
+    .info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .info-item {
+      font-size: 1rem;
+      color: #444;
+    }
+    .info-item strong {
+      color: #06776D;
+    }
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: #777;
+      background: #f2f2f2;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
-  
+  <!-- Barra di navigazione -->
   <nav>
     <a href="dettagli.html">Dati generali</a>
     <a href="dettagli2.html">Dati completi</a>
     <a href="storico.html">Storico dati</a>
   </nav>
+
+  <!-- Titolo della pagina -->
+  <div class="page-title">
+    <h1 id="station-name">Stazione Meteo</h1>
+    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
+  </div>
+
+  <!-- Scheda dati realtime -->
+  <div id="details-card">
+    <div class="details-header">
+      <h2>Panoramica</h2>
+    </div>
+    <div class="info">
+      <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val">N/D</span> °C</div>
+      <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val">N/D</span> hPa</div>
+      <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val">N/D</span> %</div>
+      <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val">N/D</span> mm</div>
+      <div class="info-item"><strong>Vento:</strong> <span id="wind-val">N/D</span> km/h</div>
+    </div>
+  </div>
+
 
 <!-- TITOLO E SOTTOTITOLO -->
   <div class="page-title">
