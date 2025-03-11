@@ -2,9 +2,9 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Dati completi - MeteoMarsia</title>
+  <title>Dettagli Meteo - Avanzato</title>
   <style>
-    /* Reset e stili base */
+    /* Reset e font base */
     * {
       margin: 0;
       padding: 0;
@@ -15,33 +15,14 @@
       background-color: #f9f9f9;
       padding: 1rem;
     }
-    /* Barra di Navigazione */
-    nav {
-      width: 100%;
-      background: #06776D;
-      padding: 0.5rem 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1rem;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-    }
-    nav a:hover {
-      background: #055d5b;
-    }
-    /* Titolo della pagina */
+
+    /* Titolo e sottotitolo */
     .page-title {
       text-align: center;
       margin-bottom: 1rem;
     }
     .page-title h1 {
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       color: #444;
       margin-bottom: 0.3rem;
     }
@@ -49,12 +30,14 @@
       color: #666;
       font-size: 0.9rem;
     }
-    /* Main container */
+
+    /* Contenitore principale */
     .main-container {
       max-width: 1100px;
       margin: 0 auto;
     }
-    /* Righe e card per i dati realtime */
+
+    /* Righe e card */
     .row {
       display: flex;
       flex-wrap: wrap;
@@ -63,7 +46,7 @@
     }
     .card {
       flex: 1;
-      min-width: 280px;
+      min-width: 280px; /* larghezza minima di ogni card */
       background-color: #fff;
       border-radius: 6px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -81,25 +64,19 @@
       margin-bottom: 0.3rem;
       line-height: 1.2rem;
     }
+    /* Footer (opzionale) */
     footer {
       text-align: center;
       padding: 0.5rem;
       font-size: 0.9rem;
       color: #777;
-      background: #f2f2f2;
+      background-color: #f2f2f2;
       margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <!-- Barra di Navigazione -->
-  <nav>
-    <a href="dettagli.html">Dati generali</a>
-    <a href="dettagli2.html">Dati completi</a>
-    <a href="storico.html">Storico dati</a>
-  </nav>
-
-  <!-- Titolo della pagina -->
+  <!-- TITOLO E SOTTOTITOLO -->
   <div class="page-title">
     <h1 id="station-name">Stazione Meteo</h1>
     <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
@@ -132,7 +109,7 @@
         <h3>Pioggia odierna</h3>
         <p><span id="rain-daily">N/D</span> mm</p>
       </div>
-      
+
       <!-- CARD LIVELLI PIOGGIA -->
       <div class="card">
         <h3>Livelli Pioggia</h3>
@@ -153,6 +130,7 @@
         <p>Raffica: <span id="wind-gust">N/D</span> km/h</p>
         <p>Direzione: <span id="wind-direction">N/D</span> °</p>
       </div>
+
       <!-- CARD PRESSIONE -->
       <div class="card">
         <h3>Pressione</h3>
@@ -160,7 +138,7 @@
       </div>
     </div>
 
-    <!-- RIGA 4: RADIAZIONE SOLARE -->
+    <!-- RIGA 4: RADIAZIONE SOLARE & VARIE -->
     <div class="row">
       <div class="card">
         <h3>Radiazione solare</h3>
@@ -175,16 +153,12 @@
   </footer>
 
   <script>
-    // Chiavi Ecowitt
-    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
-    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-    // Estrai MAC dalla query string o usa default
-    const urlParams = new URLSearchParams(window.location.search);
-    const macParam = urlParams.get('mac');
-    const defaultMac = '7C:87:CE:BE:93:0F';
-    const MAC = macParam || defaultMac;
-    
-    // Imposta il nome della stazione
+    // Leggiamo il MAC dalla query string (es: dettagli2.html?mac=80:64:6F:3E:F7:C3)
+    const params = new URLSearchParams(window.location.search);
+    const MAC = params.get('mac') || '7C:87:CE:BE:93:0F';
+
+    // Scegli un nome da mostrare in base al MAC (opzionale)
+    // Puoi anche farlo dinamico se hai più stazioni.
     let stationName = 'Stazione Meteo';
     if (MAC === '7C:87:CE:BE:93:0F') {
       stationName = 'Tagliacozzo centro';
@@ -192,145 +166,99 @@
       stationName = 'Marsia (AQ)';
     }
     document.getElementById('station-name').textContent = stationName;
-    
-    // Inizializza la pagina: carica i dati realtime e i min/max calcolati
+
+    // Chiavi Ecowitt
+    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
+    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
+
+    // Inizializza la pagina
     async function initPage() {
-      await fetchRealtimeData();
-      await fetchHistoryForMinMax();
+      await fetchWeatherData();
     }
-    
-    // Funzione per caricare i dati realtime
-    async function fetchRealtimeData() {
+
+    async function fetchWeatherData() {
       try {
-        const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
-                    `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
-                    `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+        // Richiesta all'API Ecowitt con unità in °C, hPa, km/h, mm
+        const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
         const response = await fetch(url);
         const data = await response.json();
-        console.log('Dati realtime:', data);
-        if (!data || data.code !== 0 || !data.data) return;
+        console.log('Risposta API Ecowitt:', data);
+
+        if (!data || data.code !== 0 || !data.data) {
+          console.error('Struttura dati non valida:', data);
+          return;
+        }
+
+        // Ultimo aggiornamento
         if (data.time) {
           const updateTime = new Date(parseInt(data.time) * 1000);
           document.getElementById('last-update').textContent =
             'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
         }
-        const outdoor = data.data.outdoor || {};
-        const pressureData = data.data.pressure || {};
-        const rainfallData = data.data.rainfall || {};
-        const windData = data.data.wind || {};
-        const solarData = data.data.solar_and_uvi || {};
-        
-        // Aggiorna Temperatura e Umidità attuali
-        const tempObj = outdoor.temperature;
-        const humObj = outdoor.humidity;
-        document.getElementById('temp-now').textContent =
-          tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
-        document.getElementById('humidity-now').textContent =
-          humObj ? humObj.value : 'N/D';
-        
-        // Aggiorna Pressione
-        const pressObj = pressureData.relative;
-        document.getElementById('pressure-now').textContent =
-          pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
-        
-        // Aggiorna Pioggia
-        const rainDaily = rainfallData.daily;
-        document.getElementById('rain-daily').textContent =
-          rainDaily ? parseFloat(rainDaily.value).toFixed(1) : 'N/D';
-        const rainEvent = rainfallData.event;
-        document.getElementById('rain-event').textContent =
-          rainEvent ? parseFloat(rainEvent.value).toFixed(1) : 'N/D';
-        const rainHourly = rainfallData.hourly;
-        document.getElementById('rain-hourly').textContent =
-          rainHourly ? parseFloat(rainHourly.value).toFixed(1) : 'N/D';
-        const rainWeekly = rainfallData.weekly;
-        document.getElementById('rain-weekly').textContent =
-          rainWeekly ? parseFloat(rainWeekly.value).toFixed(1) : 'N/D';
-        const rainMonthly = rainfallData.monthly;
-        document.getElementById('rain-monthly').textContent =
-          rainMonthly ? parseFloat(rainMonthly.value).toFixed(1) : 'N/D';
-        const rainYearly = rainfallData.yearly;
-        document.getElementById('rain-yearly').textContent =
-          rainYearly ? parseFloat(rainYearly.value).toFixed(1) : 'N/D';
-        
-        // Aggiorna Vento
-        const windSpeed = windData.wind_speed;
-        document.getElementById('wind-speed').textContent =
-          windSpeed ? parseFloat(windSpeed.value).toFixed(1) : 'N/D';
-        const windGust = windData.wind_gust;
-        document.getElementById('wind-gust').textContent =
-          windGust ? parseFloat(windGust.value).toFixed(1) : 'N/D';
-        const windDir = windData.wind_direction;
-        document.getElementById('wind-direction').textContent =
-          windDir ? parseFloat(windDir.value).toFixed(0) : 'N/D';
-        
-        // Aggiorna Radiazione solare e UVI
-        const solarObj = solarData.solar;
-        document.getElementById('solar-now').textContent =
-          solarObj ? parseFloat(solarObj.value).toFixed(1) : 'N/D';
-        const uviObj = solarData.uvi;
-        document.getElementById('uvi-now').textContent =
-          uviObj ? parseFloat(uviObj.value).toFixed(1) : 'N/D';
-        
+
+        // === TEMPERATURA ===
+        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
+        const tempNow = tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
+        document.getElementById('temp-now').textContent = tempNow;
+        // min e max (non forniti dall'API, sostituiti da N/D)
+        document.getElementById('temp-min').textContent = 'N/D';
+        document.getElementById('temp-max').textContent = 'N/D';
+
+        // === UMIDITÀ ===
+        const humObj = data.data.outdoor && data.data.outdoor.humidity;
+        const humNow = humObj ? humObj.value : 'N/D';
+        document.getElementById('humidity-now').textContent = humNow;
+        // min e max (non forniti dall'API, sostituiti da N/D)
+        document.getElementById('humidity-min').textContent = 'N/D';
+        document.getElementById('humidity-max').textContent = 'N/D';
+
+        // === PIOGGIA ===
+        const rainObj = data.data.rainfall;
+        // Pioggia odierna
+        const rainDaily = rainObj && rainObj.daily ? parseFloat(rainObj.daily.value).toFixed(1) : 'N/D';
+        document.getElementById('rain-daily').textContent = rainDaily;
+        // Livelli pioggia
+        const rainEvent = rainObj && rainObj.event ? parseFloat(rainObj.event.value).toFixed(1) : 'N/D';
+        const rainHourly = rainObj && rainObj.hourly ? parseFloat(rainObj.hourly.value).toFixed(1) : 'N/D';
+        const rainWeekly = rainObj && rainObj.weekly ? parseFloat(rainObj.weekly.value).toFixed(1) : 'N/D';
+        const rainMonthly = rainObj && rainObj.monthly ? parseFloat(rainObj.monthly.value).toFixed(1) : 'N/D';
+        const rainYearly = rainObj && rainObj.yearly ? parseFloat(rainObj.yearly.value).toFixed(1) : 'N/D';
+        document.getElementById('rain-event').textContent = rainEvent;
+        document.getElementById('rain-hourly').textContent = rainHourly;
+        document.getElementById('rain-weekly').textContent = rainWeekly;
+        document.getElementById('rain-monthly').textContent = rainMonthly;
+        document.getElementById('rain-yearly').textContent = rainYearly;
+
+        // === VENTO ===
+        const windObj = data.data.wind;
+        const windSpeedObj = windObj && windObj.wind_speed;
+        const windGustObj = windObj && windObj.wind_gust;
+        const windDirObj = windObj && windObj.wind_direction;
+        const windSpeed = windSpeedObj ? parseFloat(windSpeedObj.value).toFixed(1) : 'N/D';
+        const windGust = windGustObj ? parseFloat(windGustObj.value).toFixed(1) : 'N/D';
+        const windDir = windDirObj ? parseFloat(windDirObj.value).toFixed(0) : 'N/D';
+        document.getElementById('wind-speed').textContent = windSpeed;
+        document.getElementById('wind-gust').textContent = windGust;
+        document.getElementById('wind-direction').textContent = windDir;
+
+        // === PRESSIONE ===
+        const pressObj = data.data.pressure && data.data.pressure.relative;
+        const pressureNow = pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
+        document.getElementById('pressure-now').textContent = pressureNow;
+
+        // === RADIAZIONE SOLARE / UVI ===
+        const solarObj = data.data.solar_and_uvi && data.data.solar_and_uvi.solar;
+        const uviObj = data.data.solar_and_uvi && data.data.solar_and_uvi.uvi;
+        const solarVal = solarObj ? parseFloat(solarObj.value).toFixed(1) : 'N/D';
+        const uviVal = uviObj ? parseFloat(uviObj.value).toFixed(1) : 'N/D';
+        document.getElementById('solar-now').textContent = solarVal;
+        document.getElementById('uvi-now').textContent = uviVal;
+
       } catch (error) {
-        console.error('Errore nel recupero dati realtime:', error);
+        console.error('Errore nel recupero dati Ecowitt:', error);
       }
     }
-    
-    // Funzione per ottenere i valori min e max di Temperatura e Umidità dai dati storici (ultime 24 ore)
-    async function fetchHistoryForMinMax() {
-      try {
-        const now = new Date();
-        const past = new Date(now.getTime() - (24 * 60 * 60 * 1000)); // 24 ore fa
-        
-        // Formatta le date in "YYYY-MM-DD HH:MM:SS"
-        function formatDate(d) {
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const hh = String(d.getHours()).padStart(2, '0');
-          const min = String(d.getMinutes()).padStart(2, '0');
-          const ss = String(d.getSeconds()).padStart(2, '0');
-          return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
-        }
-        
-        const startDate = formatDate(past);
-        const endDate = formatDate(now);
-        
-        const url = `https://api.ecowitt.net/api/v3/device/history?` +
-                    `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
-                    `&mac=${encodeURIComponent(MAC)}` +
-                    `&start_date=${encodeURIComponent(startDate)}` +
-                    `&end_date=${encodeURIComponent(endDate)}` +
-                    `&cycle_type=auto` +
-                    `&call_back=outdoor.temperature,outdoor.humidity` +
-                    `&temp_unitid=1`;
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Dati storici per min/max:', data);
-        if (!data || data.code !== 0 || !data.data) return;
-        const tempObjHistory = data.data.outdoor && data.data.outdoor.temperature;
-        const humObjHistory = data.data.outdoor && data.data.outdoor.humidity;
-        if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) return;
-        
-        // Converti i valori in array numerici
-        const tempValues = Object.values(tempObjHistory.list).map(v => parseFloat(v)).filter(v => !isNaN(v));
-        const humValues = Object.values(humObjHistory.list).map(v => parseFloat(v)).filter(v => !isNaN(v));
-        
-        const minTemp = tempValues.length ? Math.min(...tempValues) : null;
-        const maxTemp = tempValues.length ? Math.max(...tempValues) : null;
-        const minHum = humValues.length ? Math.min(...humValues) : null;
-        const maxHum = humValues.length ? Math.max(...humValues) : null;
-        
-        document.getElementById('temp-min').textContent = (minTemp !== null) ? minTemp.toFixed(1) : 'N/D';
-        document.getElementById('temp-max').textContent = (maxTemp !== null) ? maxTemp.toFixed(1) : 'N/D';
-        document.getElementById('humidity-min').textContent = (minHum !== null) ? minHum.toFixed(0) : 'N/D';
-        document.getElementById('humidity-max').textContent = (maxHum !== null) ? maxHum.toFixed(0) : 'N/D';
-      } catch (error) {
-        console.error('Errore nel recupero dati storici per min/max:', error);
-      }
-    }
-    
+
     initPage();
   </script>
 </body>
