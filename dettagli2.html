@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Dettagli2 - MeteoMarsia</title>
+  <title>Dati Completi - MeteoMarsia</title>
   <style>
     /* Reset e stili base */
     * {
@@ -49,98 +49,22 @@
       color: #666;
       font-size: 0.9rem;
     }
-    /* Scheda dettagli realtime */
-    #details-card {
-      width: 90%;
-      max-width: 600px;
-      margin: 1rem auto;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      padding: 1rem;
-    }
-    .details-header {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .details-header h2 {
-      font-size: 1.2rem;
-      color: #06776D;
-    }
-    .info {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      justify-content: center;
-    }
-    .info-item {
-      font-size: 1rem;
-      color: #444;
-    }
-    .info-item strong {
-      color: #06776D;
-    }
-    /* Sezione dati storici */
-    .history-section {
+    /* Contenitori */
+    .container {
       width: 90%;
       max-width: 1100px;
       margin: 2rem auto;
     }
-    .form-container {
+    .section {
       background: #fff;
-      padding: 1rem;
       border-radius: 6px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
       margin-bottom: 1rem;
     }
-    .form-container label {
-      display: block;
-      margin: 0.5rem 0 0.2rem;
-      color: #06776D;
-      font-weight: bold;
-    }
-    .form-container input[type="text"] {
-      width: 100%;
-      padding: 0.4rem;
-      margin-bottom: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    .form-container button {
-      background: #06776D;
-      color: #fff;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .form-container button:hover {
-      background: #055d5b;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      background: #fff;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 0.6rem;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-    th {
-      background: #06776D;
-      color: #fff;
-    }
-    tr:hover {
-      background: #f5f5f5;
-    }
-    .msg {
+    .section h2 {
       text-align: center;
-      margin-top: 1rem;
-      color: #444;
+      color: #06776D;
     }
     /* Footer */
     footer {
@@ -154,12 +78,11 @@
   </style>
 </head>
 <body>
-
   <!-- Barra di Navigazione -->
   <nav>
-    <a href="dettagli.html">Dettagli</a>
-    <a href="dettagli2.html">Dettagli2</a>
-    <a href="storico.html">Storico</a>
+    <a href="dettagli.html">Dati Generali</a>
+    <a href="dettagli2.html">Dati Completi</a>
+    <a href="storico.html">Storico Dati</a>
   </nav>
 
   <!-- Titolo della pagina -->
@@ -168,162 +91,49 @@
     <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
   </div>
 
-  <!-- Scheda dei dati realtime -->
-  <div id="details-card">
-    <div class="details-header">
+  <!-- Scheda Dati Realtime -->
+  <div class="container">
+    <div class="section" id="details-card">
       <h2>Panoramica</h2>
-    </div>
-    <div class="info">
-      <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val">N/D</span> °C</div>
-      <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val">N/D</span> hPa</div>
-      <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val">N/D</span> %</div>
-      <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val">N/D</span> mm</div>
-      <div class="info-item"><strong>Vento:</strong> <span id="wind-val">N/D</span> km/h</div>
+      <div class="info">
+        <div class="info-item"><strong>Temperatura:</strong> <span id="temp-val">N/D</span> °C</div>
+        <div class="info-item"><strong>Pressione:</strong> <span id="pressure-val">N/D</span> hPa</div>
+        <div class="info-item"><strong>Umidità:</strong> <span id="humidity-val">N/D</span> %</div>
+        <div class="info-item"><strong>Precipitazioni:</strong> <span id="rain-val">N/D</span> mm</div>
+        <div class="info-item"><strong>Vento:</strong> <span id="wind-val">N/D</span> km/h</div>
+      </div>
     </div>
   </div>
 
   <!-- Sezione Dati Storici -->
-  <div class="history-section">
-    <div class="form-container">
-      <label for="startDate">Data e ora inizio (ISO8601):</label>
-      <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
-      <label for="endDate">Data e ora fine (ISO8601):</label>
-      <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
-      <label for="mac">MAC Address:</label>
-      <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
-      <button id="loadHistoryBtn">Carica Dati Storici</button>
+  <div class="container">
+    <div class="section history-section">
+      <h2>Dati Storici</h2>
+      <div class="form-container">
+        <label for="startDate">Data e ora inizio (ISO8601):</label>
+        <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
+        <label for="endDate">Data e ora fine (ISO8601):</label>
+        <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
+        <label for="mac">MAC Address:</label>
+        <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
+        <button id="loadHistoryBtn">Carica Dati Storici</button>
+      </div>
+      <div class="msg" id="history-msg"></div>
+      <table id="history-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>Data/ora</th>
+            <th>Temperatura (°C)</th>
+            <th>Umidità (%)</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
     </div>
-    <div class="msg" id="history-msg"></div>
-    <table id="history-table" style="display: none;">
-      <thead>
-        <tr>
-          <th>Data/ora</th>
-          <th>Temperatura (°C)</th>
-          <th>Umidità (%)</th>
-        </tr>
-      </thead>
-      <tbody id="history-body"></tbody>
-    </table>
   </div>
 
   <footer>
     MeteoMarsia © 2025 - Tutti i diritti riservati
   </footer>
-
-  <script>
-    // Imposta le chiavi Ecowitt
-    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
-    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
-
-    // Estrae il MAC dalla query string se presente, altrimenti usa un default
-    const urlParams = new URLSearchParams(window.location.search);
-    const macParam = urlParams.get('mac');
-    const defaultMac = '7C:87:CE:BE:93:0F';
-    const MAC = macParam || defaultMac;
-
-    // Imposta il nome della stazione in base al MAC
-    let stationName = 'Stazione Meteo';
-    if (MAC === '7C:87:CE:BE:93:0F') {
-      stationName = 'Tagliacozzo centro';
-    } else if (MAC === '80:64:6F:3E:F7:C3') {
-      stationName = 'Marsia (AQ)';
-    }
-    document.getElementById('station-name').textContent = stationName;
-
-    // Inizializza la pagina: carica dati realtime e setta il campo MAC nel form storico
-    async function initPage() {
-      await fetchRealtimeData();
-      document.getElementById('mac').value = MAC;
-    }
-
-    // Funzione per ottenere i dati realtime e aggiornare la sezione dettagli
-    async function fetchRealtimeData() {
-      try {
-        const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
-          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
-          `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Dati realtime:', data);
-        if (!data || data.code !== 0 || !data.data) {
-          console.error('Dati realtime non validi:', data);
-          return;
-        }
-        if (data.time) {
-          const updateTime = new Date(parseInt(data.time) * 1000);
-          document.getElementById('last-update').textContent = 'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
-        }
-        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
-        const humObj = data.data.outdoor && data.data.outdoor.humidity;
-        const pressObj = data.data.pressure && data.data.pressure.relative;
-        const rainObj = data.data.rainfall && data.data.rainfall.daily;
-        const windObj = data.data.wind && data.data.wind.wind_speed;
-        document.getElementById('temp-val').textContent = tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
-        document.getElementById('humidity-val').textContent = humObj ? humObj.value : 'N/D';
-        document.getElementById('pressure-val').textContent = pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
-        document.getElementById('rain-val').textContent = rainObj ? parseFloat(rainObj.value).toFixed(1) : 'N/D';
-        document.getElementById('wind-val').textContent = windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
-      } catch (error) {
-        console.error('Errore nel recupero dati realtime:', error);
-      }
-    }
-
-    // Gestione dei dati storici
-    document.getElementById('loadHistoryBtn').addEventListener('click', async () => {
-      const startDate = document.getElementById('startDate').value.trim();
-      const endDate = document.getElementById('endDate').value.trim();
-      const macInput = document.getElementById('mac').value.trim();
-      if (!startDate || !endDate) {
-        alert('Inserisci startDate e endDate validi');
-        return;
-      }
-      document.getElementById('history-msg').textContent = 'Caricamento in corso...';
-      document.getElementById('history-table').style.display = 'none';
-
-      try {
-        const url = `https://api.ecowitt.net/api/v3/device/history?` +
-          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
-          `&mac=${encodeURIComponent(macInput)}` +
-          `&start_date=${encodeURIComponent(startDate)}` +
-          `&end_date=${encodeURIComponent(endDate)}` +
-          `&cycle_type=auto` +
-          `&call_back=outdoor.temperature,outdoor.humidity` +
-          `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log('Dati storici:', data);
-        if (!data || data.code !== 0 || !data.data) {
-          document.getElementById('history-msg').textContent = 'Errore nel recupero dati storici';
-          return;
-        }
-        const tableBody = document.getElementById('history-body');
-        tableBody.innerHTML = '';
-        const tempObjHistory = data.data.outdoor && data.data.outdoor.temperature;
-        const humObjHistory = data.data.outdoor && data.data.outdoor.humidity;
-        if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) {
-          document.getElementById('history-msg').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
-          return;
-        }
-        const tempList = tempObjHistory.list;
-        const humList = humObjHistory.list;
-        const tempKeys = Object.keys(tempList).sort();
-        tempKeys.forEach(ts => {
-          const tempVal = parseFloat(tempList[ts]).toFixed(1);
-          const humVal = humList[ts] ? parseFloat(humList[ts]).toFixed(0) : 'N/D';
-          const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
-          const row = document.createElement('tr');
-          row.innerHTML = `<td>${dateStr}</td><td>${tempVal}</td><td>${humVal}</td>`;
-          tableBody.appendChild(row);
-        });
-        document.getElementById('history-table').style.display = 'table';
-        document.getElementById('history-msg').textContent = '';
-      } catch (error) {
-        console.error('Errore nel recupero dati storici:', error);
-        document.getElementById('history-msg').textContent = 'Si è verificato un errore';
-      }
-    });
-
-    initPage();
-  </script>
 </body>
 </html>
