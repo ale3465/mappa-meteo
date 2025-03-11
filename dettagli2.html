@@ -1,94 +1,394 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dettagli Meteo</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-
-        .navbar {
-            background-color: #333;
-            overflow: hidden;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            padding: 14px 20px;
-            display: inline-block;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .info {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .highlight {
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Dati completi - MeteoMarsia</title>
+  <style>
+    /* Reset e stili base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+    body {
+      background-color: #f9f9f9;
+      padding: 1rem;
+    }
+    /* Barra di Navigazione */
+    nav {
+      width: 100%;
+      background: #06776D;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+    }
+    nav a:hover {
+      background: #055d5b;
+    }
+    /* Titolo della pagina */
+    .page-title {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .page-title h1 {
+      font-size: 1.8rem;
+      color: #444;
+      margin-bottom: 0.3rem;
+    }
+    .page-title p {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    /* Main container */
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    /* Righe e card per i dati realtime */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card {
+      flex: 1;
+      min-width: 280px;
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: #06776D;
+      text-transform: uppercase;
+    }
+    .card p {
+      font-size: 0.9rem;
+      color: #444;
+      margin-bottom: 0.3rem;
+      line-height: 1.2rem;
+    }
+    /* Sezione dati storici separata */
+    .history-section {
+      margin: 2rem auto;
+    }
+    .form-container {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .form-container label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      color: #06776D;
+      font-weight: bold;
+    }
+    .form-container input[type="text"] {
+      width: 100%;
+      padding: 0.4rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .form-container button {
+      background: #06776D;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background: #055d5b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 0.6rem;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    th {
+      background: #06776D;
+      color: #fff;
+    }
+    tr:hover {
+      background: #f5f5f5;
+    }
+    .msg {
+      text-align: center;
+      margin-top: 1rem;
+      color: #444;
+    }
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      color: #777;
+      background: #f2f2f2;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
+  <!-- Barra di Navigazione -->
+  <nav>
+    <a href="dettagli.html">Dati generali</a>
+    <a href="dettagli2.html">Dati completi</a>
+    <a href="storico.html">Storico dati</a>
+  </nav>
 
-    <div class="navbar">
-        <a href="index.html">Home</a>
-        <a href="#">Storico</a>
-        <a href="#">Impostazioni</a>
+  <!-- Titolo della pagina -->
+  <div class="page-title">
+    <h1 id="station-name">Stazione Meteo</h1>
+    <p id="last-update">Ultimo aggiornamento: --/--/---- --:--:--</p>
+  </div>
+
+  <div class="main-container">
+    <!-- RIGA 1: TEMPERATURA & UMIDITÀ -->
+    <div class="row">
+      <!-- CARD TEMPERATURA -->
+      <div class="card">
+        <h3>Temperatura</h3>
+        <p>Attuale: <span id="temp-now">N/D</span> °C</p>
+        <p>Min: <span id="temp-min">N/D</span> °C</p>
+        <p>Max: <span id="temp-max">N/D</span> °C</p>
+      </div>
+
+      <!-- CARD UMIDITÀ -->
+      <div class="card">
+        <h3>Umidità</h3>
+        <p>Attuale: <span id="humidity-now">N/D</span> %</p>
+        <p>Min: <span id="humidity-min">N/D</span> %</p>
+        <p>Max: <span id="humidity-max">N/D</span> %</p>
+      </div>
     </div>
 
-    <div class="container">
-        <h2>Dettagli Meteo</h2>
-        <p class="info">Temperatura attuale: <span class="highlight" id="temp"></span>°C</p>
-        <p class="info">Temperatura minima: <span class="highlight" id="tempMin"></span>°C</p>
-        <p class="info">Temperatura massima: <span class="highlight" id="tempMax"></span>°C</p>
-        <p class="info">Umidità: <span class="highlight" id="humidity"></span>%</p>
-        <p class="info">Pressione: <span class="highlight" id="pressure"></span> hPa</p>
+    <!-- RIGA 2: PIOGGIA -->
+    <div class="row">
+      <!-- CARD PIOGGIA ODIERNA -->
+      <div class="card">
+        <h3>Pioggia odierna</h3>
+        <p><span id="rain-daily">N/D</span> mm</p>
+      </div>
+      
+      <!-- CARD LIVELLI PIOGGIA -->
+      <div class="card">
+        <h3>Livelli Pioggia</h3>
+        <p>Evento: <span id="rain-event">N/D</span> mm</p>
+        <p>1H: <span id="rain-hourly">N/D</span> mm</p>
+        <p>Settimana: <span id="rain-weekly">N/D</span> mm</p>
+        <p>Mese: <span id="rain-monthly">N/D</span> mm</p>
+        <p>Anno: <span id="rain-yearly">N/D</span> mm</p>
+      </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const params = new URLSearchParams(window.location.search);
-            const temp = params.get("temp");
-            const humidity = params.get("humidity");
-            const pressure = params.get("pressure");
+    <!-- RIGA 3: VENTO & PRESSIONE -->
+    <div class="row">
+      <!-- CARD VENTO -->
+      <div class="card">
+        <h3>Vento</h3>
+        <p>Velocità: <span id="wind-speed">N/D</span> km/h</p>
+        <p>Raffica: <span id="wind-gust">N/D</span> km/h</p>
+        <p>Direzione: <span id="wind-direction">N/D</span> °</p>
+      </div>
 
-            // Recupera i dati storici dal localStorage
-            const storedData = localStorage.getItem("storicoDati");
-            let storico = storedData ? JSON.parse(storedData) : [];
+      <!-- CARD PRESSIONE -->
+      <div class="card">
+        <h3>Pressione</h3>
+        <p><span id="pressure-now">N/D</span> hPa</p>
+      </div>
+    </div>
 
-            let minTemp = Math.min(...storico.map(d => d.temp));
-            let maxTemp = Math.max(...storico.map(d => d.temp));
+    <!-- RIGA 4: RADIAZIONE SOLARE (scheda "Varie" rimossa) -->
+    <div class="row">
+      <div class="card">
+        <h3>Radiazione solare</h3>
+        <p>Solar: <span id="solar-now">N/D</span> W/m²</p>
+        <p>UVI: <span id="uvi-now">N/D</span></p>
+      </div>
+    </div>
+  </div>
 
-            // Aggiorna la pagina con i dati
-            document.getElementById("temp").textContent = temp || "N/A";
-            document.getElementById("humidity").textContent = humidity || "N/A";
-            document.getElementById("pressure").textContent = pressure || "N/A";
-            document.getElementById("tempMin").textContent = isFinite(minTemp) ? minTemp.toFixed(1) : "N/A";
-            document.getElementById("tempMax").textContent = isFinite(maxTemp) ? maxTemp.toFixed(1) : "N/A";
+  <!-- Sezione Dati Storici Separata -->
+  <div class="history-section">
+    <h2 style="text-align: center; color: #06776D;">Dati Storici</h2>
+    <div class="form-container">
+      <label for="startDate">Data e ora inizio (ISO8601):</label>
+      <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
+      <label for="endDate">Data e ora fine (ISO8601):</label>
+      <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
+      <label for="mac">MAC Address:</label>
+      <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
+      <button id="loadHistoryBtn">Carica Dati Storici</button>
+    </div>
+    <div class="msg" id="history-msg"></div>
+    <table id="history-table" style="display: none;">
+      <thead>
+        <tr>
+          <th>Data/ora</th>
+          <th>Temperatura (°C)</th>
+          <th>Umidità (%)</th>
+        </tr>
+      </thead>
+      <tbody id="history-body"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    MeteoMarsia © 2025 - Tutti i diritti riservati
+  </footer>
+
+  <script>
+    // Chiavi Ecowitt e parametri
+    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
+    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
+
+    // Estrai MAC dalla query string o usa default
+    const urlParams = new URLSearchParams(window.location.search);
+    const macParam = urlParams.get('mac');
+    const defaultMac = '7C:87:CE:BE:93:0F';
+    const MAC = macParam || defaultMac;
+
+    // Imposta il nome della stazione
+    let stationName = 'Stazione Meteo';
+    if (MAC === '7C:87:CE:BE:93:0F') {
+      stationName = 'Tagliacozzo centro';
+    } else if (MAC === '80:64:6F:3E:F7:C3') {
+      stationName = 'Marsia (AQ)';
+    }
+    document.getElementById('station-name').textContent = stationName;
+
+    // Inizializza la pagina (carica dati realtime e imposta il campo MAC nel form storico)
+    async function initPage() {
+      await fetchRealtimeData();
+      document.getElementById('mac').value = MAC;
+    }
+
+    // Funzione per caricare i dati realtime
+    async function fetchRealtimeData() {
+      try {
+        const url = `https://api.ecowitt.net/api/v3/device/real_time?` +
+                    `application_key=${APPLICATION_KEY}&api_key=${API_KEY}&mac=${MAC}` +
+                    `&call_back=all&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log('Dati realtime:', data);
+        if (!data || data.code !== 0 || !data.data) return;
+        if (data.time) {
+          const updateTime = new Date(parseInt(data.time) * 1000);
+          document.getElementById('last-update').textContent =
+            'Ultimo aggiornamento: ' + updateTime.toLocaleString('it-IT');
+        }
+        // Aggiorna i campi realtime (solo valori attuali)
+        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
+        const humObj = data.data.outdoor && data.data.outdoor.humidity;
+        const pressObj = data.data.pressure && data.data.pressure.relative;
+        const rainObj = data.data.rainfall && data.data.rainfall.daily;
+        const windObj = data.data.wind && data.data.wind.wind_speed;
+        document.getElementById('temp-now').textContent =
+          tempObj ? parseFloat(tempObj.value).toFixed(1) : 'N/D';
+        document.getElementById('humidity-now').textContent =
+          humObj ? humObj.value : 'N/D';
+        document.getElementById('pressure-val').textContent =
+          pressObj ? parseFloat(pressObj.value).toFixed(1) : 'N/D';
+        document.getElementById('rain-val').textContent =
+          rainObj ? parseFloat(rainObj.value).toFixed(1) : 'N/D';
+        document.getElementById('wind-val').textContent =
+          windObj ? parseFloat(windObj.value).toFixed(1) : 'N/D';
+      } catch (error) {
+        console.error('Errore nel recupero dati realtime:', error);
+      }
+    }
+
+    // Gestione dei dati storici e calcolo min/max
+    document.getElementById('loadHistoryBtn').addEventListener('click', async () => {
+      const startDate = document.getElementById('startDate').value.trim();
+      const endDate = document.getElementById('endDate').value.trim();
+      const macInput = document.getElementById('mac').value.trim();
+      if (!startDate || !endDate) {
+        alert('Inserisci startDate e endDate validi');
+        return;
+      }
+      document.getElementById('history-msg').textContent = 'Caricamento in corso...';
+      document.getElementById('history-table').style.display = 'none';
+      try {
+        const url = `https://api.ecowitt.net/api/v3/device/history?` +
+                    `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
+                    `&mac=${encodeURIComponent(macInput)}` +
+                    `&start_date=${encodeURIComponent(startDate)}` +
+                    `&end_date=${encodeURIComponent(endDate)}` +
+                    `&cycle_type=auto` +
+                    `&call_back=outdoor.temperature,outdoor.humidity` +
+                    `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log('Dati storici:', data);
+        if (!data || data.code !== 0 || !data.data) {
+          document.getElementById('history-msg').textContent = 'Errore nel recupero dati storici';
+          return;
+        }
+        const tableBody = document.getElementById('history-body');
+        tableBody.innerHTML = '';
+        const tempObjHistory = data.data.outdoor && data.data.outdoor.temperature;
+        const humObjHistory = data.data.outdoor && data.data.outdoor.humidity;
+        if (!tempObjHistory || !tempObjHistory.list || !humObjHistory || !humObjHistory.list) {
+          document.getElementById('history-msg').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
+          return;
+        }
+        const tempList = Object.values(tempObjHistory.list).map(x => parseFloat(x));
+        const humList = Object.values(humObjHistory.list).map(x => parseFloat(x));
+        // Calcola min e max
+        const minTemp = Math.min(...tempList);
+        const maxTemp = Math.max(...tempList);
+        const minHum = Math.min(...humList);
+        const maxHum = Math.max(...humList);
+        // Aggiorna le card realtime con min e max
+        document.getElementById('temp-min').textContent = isFinite(minTemp) ? minTemp.toFixed(1) : 'N/D';
+        document.getElementById('temp-max').textContent = isFinite(maxTemp) ? maxTemp.toFixed(1) : 'N/D';
+        document.getElementById('humidity-min').textContent = isFinite(minHum) ? minHum.toFixed(0) : 'N/D';
+        document.getElementById('humidity-max').textContent = isFinite(maxHum) ? maxHum.toFixed(0) : 'N/D';
+
+        // Popola la tabella storica
+        const tempKeys = Object.keys(tempObjHistory.list).sort((a, b) => a - b);
+        tempKeys.forEach(ts => {
+          const tempVal = parseFloat(tempObjHistory.list[ts]).toFixed(1);
+          const humVal = humObjHistory.list[ts] ? parseFloat(humObjHistory.list[ts]).toFixed(0) : 'N/D';
+          const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
+          const row = document.createElement('tr');
+          row.innerHTML = `<td>${dateStr}</td><td>${tempVal}</td><td>${humVal}</td>`;
+          tableBody.appendChild(row);
         });
-    </script>
-
+        document.getElementById('history-table').style.display = 'table';
+        document.getElementById('history-msg').textContent = '';
+      } catch (error) {
+        console.error('Errore nel recupero dati storici:', error);
+        document.getElementById('history-msg').textContent = 'Si è verificato un errore';
+      }
+    });
+    
+    initPage();
+  </script>
 </body>
 </html>
