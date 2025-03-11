@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dati Storici Ecowitt</title>
+  <style>
+    /* Stili di base */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+      font-family: sans-serif;
+    }
+    body {
+      background-color: #f9f9f9;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #444;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto 1rem;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin: 0.5rem 0 0.2rem;
+      color: #06776D;
+      font-weight: bold;
+    }
+    input[type='text'] {
+      width: 100%;
+      padding: 0.4rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background: #06776D;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #055d5b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: #06776D;
+      color: #fff;
+      font-weight: normal;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    .msg {
+      text-align: center;
+      margin-top: 1rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dati Storici Ecowitt</h1>
+
+  <div class="form-container">
+    <!-- Form per impostare l'intervallo di date -->
+    <label for="startDate">Data e ora inizio (ISO8601):</label>
+    <input type="text" id="startDate" placeholder="es. 2025-03-10 00:00:00" />
+
+    <label for="endDate">Data e ora fine (ISO8601):</label>
+    <input type="text" id="endDate" placeholder="es. 2025-03-10 23:59:59" />
+
+    <label for="mac">MAC Address:</label>
+    <input type="text" id="mac" placeholder="es. 7C:87:CE:BE:93:0F" />
+
+    <button id="loadDataBtn">Carica Dati</button>
+  </div>
+
+  <div class="msg" id="message"></div>
+
+  <!-- Tabella con i dati storici -->
+  <table id="history-table" style="display: none;">
+    <thead>
+      <tr>
+        <th>Data/ora</th>
+        <th>Temperatura (°C)</th>
+        <th>Umidità (%)</th>
+      </tr>
+    </thead>
+    <tbody id="history-body"></tbody>
+  </table>
+
+  <script>
+    // Imposta le chiavi Ecowitt (personalizza i valori)
+    const APPLICATION_KEY = '2BE0A47E434D61D1E866A12B03C9574D';
+    const API_KEY = '92e76b42-2b76-41c2-9b33-f81c50aaddca';
+
+    // Al click sul pulsante, carichiamo i dati storici
+    document.getElementById('loadDataBtn').addEventListener('click', async () => {
+      // Leggiamo i parametri dal form
+      const startDate = document.getElementById('startDate').value.trim();
+      const endDate = document.getElementById('endDate').value.trim();
+      const mac = document.getElementById('mac').value.trim() || '7C:87:CE:BE:93:0F';
+
+      if (!startDate || !endDate) {
+        alert('Inserisci startDate e endDate validi');
+        return;
+      }
+
+      // Messaggio di caricamento
+      document.getElementById('message').textContent = 'Caricamento in corso...';
+      document.getElementById('history-table').style.display = 'none';
+
+      try {
+        // Esempio: cicliamo su 'outdoor.temperature' e 'outdoor.humidity'
+        // Puoi aggiungere altri campi in call_back, separati da virgole
+        // Impostiamo le unità di misura in °C, hPa, km/h, mm se vuoi
+        const url = `https://api.ecowitt.net/api/v3/device/history?` +
+          `application_key=${APPLICATION_KEY}&api_key=${API_KEY}` +
+          `&mac=${encodeURIComponent(mac)}` +
+          `&start_date=${encodeURIComponent(startDate)}` +
+          `&end_date=${encodeURIComponent(endDate)}` +
+          `&cycle_type=auto` +
+          `&call_back=outdoor.temperature,outdoor.humidity` +
+          `&temp_unitid=1&pressure_unitid=3&wind_speed_unitid=7&rainfall_unitid=12`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log('Risposta API history:', data);
+
+        if (!data || data.code !== 0 || !data.data) {
+          document.getElementById('message').textContent = 'Errore nel recupero dati storici';
+          return;
+        }
+
+        // Puliamo la tabella
+        const tableBody = document.getElementById('history-body');
+        tableBody.innerHTML = '';
+
+        // Ricaviamo i riferimenti a temperature e humidity
+        // Esempio: data.data.outdoor.temperature.list, data.data.outdoor.humidity.list
+        const tempObj = data.data.outdoor && data.data.outdoor.temperature;
+        const humObj = data.data.outdoor && data.data.outdoor.humidity;
+
+        if (!tempObj || !tempObj.list || !humObj || !humObj.list) {
+          document.getElementById('message').textContent = 'Nessun dato disponibile per Temperatura/Umidità in questo intervallo';
+          return;
+        }
+
+        const tempList = tempObj.list;  // Oggetto con chi=timestamp, val=temperatura
+        const humList = humObj.list;    // Oggetto con chi=timestamp, val=umidità
+
+        // Ciascun 'list' è un oggetto: { '1647993600': '44.3', '1648008000': '58.0', ... }
+        // Cicliamo su tempList e usiamo la stessa chiave per trovare l'umidità
+        // NOTA: Non è garantito che abbiano le stesse chiavi esatte, ma di solito corrispondono
+        const tempKeys = Object.keys(tempList).sort(); // Ordina i timestamp
+
+        // Popoliamo la tabella
+        tempKeys.forEach(ts => {
+          const tempVal = parseFloat(tempList[ts]).toFixed(1);
+          const humVal = humList[ts] ? parseFloat(humList[ts]).toFixed(0) : 'N/D';
+
+          // ts è un timestamp in secondi, convertiamolo in data leggibile
+          const dateStr = new Date(ts * 1000).toLocaleString('it-IT');
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${dateStr}</td>
+            <td>${tempVal}</td>
+            <td>${humVal}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        // Mostriamo la tabella
+        document.getElementById('history-table').style.display = 'table';
+        document.getElementById('message').textContent = '';
+
+      } catch (error) {
+        console.error('Errore nel recupero dati storici:', error);
+        document.getElementById('message').textContent = 'Si è verificato un errore';
+      }
+    });
+  </script>
+</body>
+</html>
