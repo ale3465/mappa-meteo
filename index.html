@@ -12,26 +12,14 @@
       box-sizing: border-box;
       font-family: sans-serif;
     }
-    body {
-      background-color: #f9f9f9;
-    }
-    .page-title {
-      text-align: center;
-      padding: 1rem 0;
-    }
-    .page-title h1 {
-      font-size: 1.6rem;
-      margin-bottom: 0.3rem;
-      color: #444;
-    }
-    .page-title p {
-      color: #666;
-      font-size: 0.9rem;
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
     }
     #map {
       width: 100%;
-      height: 60vh;
-      border: 1px solid #ccc;
+      height: 100vh;
     }
     .temp-label {
       background: none !important;
@@ -41,12 +29,27 @@
       text-align: center;
       line-height: 14px;
     }
+    .page-title {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
     footer {
-      text-align: center;
-      padding: 0.5rem;
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.8);
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       font-size: 0.9rem;
       color: #777;
-      background-color: #f2f2f2;
     }
   </style>
 </head>
